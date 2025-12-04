@@ -192,3 +192,177 @@ export function updatePracticeStats(chars: number, errors: number, time: number)
   stats.lastPractice = Date.now()
   localStorage.setItem('shuangpin_stats', JSON.stringify(stats))
 }
+
+// ============================================
+// 历史记录（每日统计）
+// ============================================
+
+export interface DailyRecord {
+  date: string // YYYY-MM-DD
+  chars: number
+  errors: number
+  time: number // seconds
+  sessions: number
+  avgSpeed: number // 字/分钟
+}
+
+export function getDailyRecords(): DailyRecord[] {
+  if (typeof window === 'undefined') return []
+  const data = localStorage.getItem('shuangpin_daily')
+  return data ? JSON.parse(data) : []
+}
+
+export function saveDailyRecord(chars: number, errors: number, time: number) {
+  if (typeof window === 'undefined') return
+  const today = new Date().toISOString().split('T')[0]
+  const records = getDailyRecords()
+  
+  let todayRecord = records.find(r => r.date === today)
+  if (!todayRecord) {
+    todayRecord = { date: today, chars: 0, errors: 0, time: 0, sessions: 0, avgSpeed: 0 }
+    records.push(todayRecord)
+  }
+  
+  todayRecord.chars += chars
+  todayRecord.errors += errors
+  todayRecord.time += time
+  todayRecord.sessions++
+  todayRecord.avgSpeed = todayRecord.time > 0 ? Math.round(todayRecord.chars / (todayRecord.time / 60)) : 0
+  
+  // 只保留最近30天
+  const sorted = records.sort((a, b) => b.date.localeCompare(a.date)).slice(0, 30)
+  localStorage.setItem('shuangpin_daily', JSON.stringify(sorted))
+}
+
+// ============================================
+// 成就系统
+// ============================================
+
+export interface Achievement {
+  id: string
+  name: string
+  desc: string
+  icon: string
+  condition: (stats: PracticeStats, daily: DailyRecord[]) => boolean
+  unlocked?: boolean
+  unlockedAt?: number
+}
+
+export const achievements: Achievement[] = [
+  { id: 'first_practice', name: '初出茅庐', desc: '完成第一次练习', icon: '🎯', condition: (s) => s.sessions >= 1 },
+  { id: 'chars_100', name: '百字斩', desc: '累计练习100字', icon: '💯', condition: (s) => s.totalChars >= 100 },
+  { id: 'chars_500', name: '五百壮士', desc: '累计练习500字', icon: '⚔️', condition: (s) => s.totalChars >= 500 },
+  { id: 'chars_1000', name: '千字文', desc: '累计练习1000字', icon: '📜', condition: (s) => s.totalChars >= 1000 },
+  { id: 'chars_5000', name: '五千大关', desc: '累计练习5000字', icon: '🏆', condition: (s) => s.totalChars >= 5000 },
+  { id: 'chars_10000', name: '万字王', desc: '累计练习10000字', icon: '👑', condition: (s) => s.totalChars >= 10000 },
+  { id: 'sessions_10', name: '坚持不懈', desc: '练习10次', icon: '💪', condition: (s) => s.sessions >= 10 },
+  { id: 'sessions_50', name: '习惯养成', desc: '练习50次', icon: '🔥', condition: (s) => s.sessions >= 50 },
+  { id: 'sessions_100', name: '百炼成钢', desc: '练习100次', icon: '🌟', condition: (s) => s.sessions >= 100 },
+  { id: 'accuracy_90', name: '精准射手', desc: '单次准确率达到90%', icon: '🎯', condition: () => false }, // 特殊处理
+  { id: 'speed_60', name: '飞速打字', desc: '速度达到60字/分钟', icon: '⚡', condition: () => false }, // 特殊处理
+  { id: 'streak_3', name: '三天打鱼', desc: '连续练习3天', icon: '📅', condition: (_, d) => getStreak(d) >= 3 },
+  { id: 'streak_7', name: '一周坚持', desc: '连续练习7天', icon: '🗓️', condition: (_, d) => getStreak(d) >= 7 },
+  { id: 'streak_30', name: '月度达人', desc: '连续练习30天', icon: '🏅', condition: (_, d) => getStreak(d) >= 30 },
+]
+
+function getStreak(daily: DailyRecord[]): number {
+  if (daily.length === 0) return 0
+  const sorted = [...daily].sort((a, b) => b.date.localeCompare(a.date))
+  const today = new Date().toISOString().split('T')[0]
+  
+  let streak = 0
+  let checkDate = new Date(today)
+  
+  for (const record of sorted) {
+    const recordDate = record.date
+    const expectedDate = checkDate.toISOString().split('T')[0]
+    
+    if (recordDate === expectedDate) {
+      streak++
+      checkDate.setDate(checkDate.getDate() - 1)
+    } else if (recordDate < expectedDate) {
+      break
+    }
+  }
+  return streak
+}
+
+export function getUnlockedAchievements(): Achievement[] {
+  if (typeof window === 'undefined') return []
+  const stats = getPracticeStats()
+  const daily = getDailyRecords()
+  const unlocked = localStorage.getItem('shuangpin_achievements')
+  const unlockedIds: Record<string, number> = unlocked ? JSON.parse(unlocked) : {}
+  
+  return achievements.map(a => ({
+    ...a,
+    unlocked: !!unlockedIds[a.id] || a.condition(stats, daily),
+    unlockedAt: unlockedIds[a.id],
+  }))
+}
+
+export function checkAndUnlockAchievements(accuracy?: number, speed?: number): Achievement[] {
+  if (typeof window === 'undefined') return []
+  const stats = getPracticeStats()
+  const daily = getDailyRecords()
+  const unlocked = localStorage.getItem('shuangpin_achievements')
+  const unlockedIds: Record<string, number> = unlocked ? JSON.parse(unlocked) : {}
+  
+  const newlyUnlocked: Achievement[] = []
+  
+  for (const a of achievements) {
+    if (unlockedIds[a.id]) continue
+    
+    let shouldUnlock = false
+    if (a.id === 'accuracy_90' && accuracy && accuracy >= 90) shouldUnlock = true
+    else if (a.id === 'speed_60' && speed && speed >= 60) shouldUnlock = true
+    else if (a.condition(stats, daily)) shouldUnlock = true
+    
+    if (shouldUnlock) {
+      unlockedIds[a.id] = Date.now()
+      newlyUnlocked.push({ ...a, unlocked: true, unlockedAt: Date.now() })
+    }
+  }
+  
+  if (newlyUnlocked.length > 0) {
+    localStorage.setItem('shuangpin_achievements', JSON.stringify(unlockedIds))
+  }
+  
+  return newlyUnlocked
+}
+
+// ============================================
+// 智能推荐
+// ============================================
+
+export function getSmartRecommendation(): { type: string; keys: string[]; reason: string } | null {
+  const errors = getFrequentErrors(5)
+  const weakFinals = getWeakFinals()
+  
+  if (errors.length === 0) return null
+  
+  // 找出最薄弱的韵母
+  const sortedFinals = Object.entries(weakFinals).sort((a, b) => b[1] - a[1])
+  if (sortedFinals.length > 0) {
+    const [weakKey, count] = sortedFinals[0]
+    if (count >= 3) {
+      return {
+        type: 'final',
+        keys: [weakKey],
+        reason: `韵母 "${weakKey}" 错误${count}次，建议专项练习`,
+      }
+    }
+  }
+  
+  // 检查变位声母
+  const zhChShErrors = errors.filter(e => ['v', 'i', 'u'].includes(e.shuangpin[0]))
+  if (zhChShErrors.length >= 2) {
+    return {
+      type: 'initial',
+      keys: ['v', 'i', 'u'],
+      reason: 'zh/ch/sh 变位声母错误较多，建议专项练习',
+    }
+  }
+  
+  return null
+}

@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { CharInfo } from '@/lib/xiaohe'
 import { convertTextToQueue, getRandomText } from '@/lib/converter'
 import { playKeySound, playSuccessSound, playErrorSound, playCompleteSound } from '@/lib/sound'
-import { saveErrorRecord, updatePracticeStats } from '@/lib/learning'
+import { saveErrorRecord, updatePracticeStats, saveDailyRecord, checkAndUnlockAchievements, Achievement } from '@/lib/learning'
 import Keyboard from './Keyboard'
 import Tutorial from './Tutorial'
 import PracticeMode from './PracticeMode'
@@ -42,8 +42,26 @@ export default function Trainer() {
   const [wrongKey, setWrongKey] = useState<string | null>(null)
   const [correctKey, setCorrectKey] = useState<string | null>(null)
 
-  // 从 localStorage 恢复设置
+  // 从 URL 参数或 localStorage 恢复设置
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const urlText = params.get('text')
+    const urlMode = params.get('mode')
+    const urlTimed = params.get('timed')
+    
+    // URL 参数优先
+    if (urlText) {
+      setInputText(decodeURIComponent(urlText))
+      setTimeout(() => startPractice(decodeURIComponent(urlText)), 100)
+    }
+    if (urlMode === 'blind') setLearningMode('blind')
+    if (urlTimed) {
+      setIsTimedMode(true)
+      setTimedDuration(parseInt(urlTimed) || 60)
+      setTimeLeft(parseInt(urlTimed) || 60)
+    }
+    
+    // localStorage
     const savedDarkMode = localStorage.getItem('shuangpin_darkMode')
     const savedSound = localStorage.getItem('shuangpin_sound')
     const savedMode = localStorage.getItem('shuangpin_mode')
@@ -51,7 +69,7 @@ export default function Trainer() {
     
     if (savedDarkMode !== null) setDarkMode(savedDarkMode === 'true')
     if (savedSound !== null) setSoundEnabled(savedSound === 'true')
-    if (savedMode) setLearningMode(savedMode as LearningMode)
+    if (!urlMode && savedMode) setLearningMode(savedMode as LearningMode)
     if (savedSource) setTextSource(savedSource as 'local' | 'online')
     
     const visited = localStorage.getItem('shuangpin_visited')
@@ -60,6 +78,15 @@ export default function Trainer() {
       localStorage.setItem('shuangpin_visited', 'true')
     }
   }, [])
+  
+  // 生成分享链接
+  const getShareUrl = () => {
+    const params = new URLSearchParams()
+    if (inputText) params.set('text', encodeURIComponent(inputText))
+    if (learningMode === 'blind') params.set('mode', 'blind')
+    if (isTimedMode) params.set('timed', String(timedDuration))
+    return `${window.location.origin}${window.location.pathname}?${params.toString()}`
+  }
 
   // 保存设置到 localStorage
   useEffect(() => {
@@ -190,13 +217,40 @@ export default function Trainer() {
     }
   }, [isStarted, currentIndex, queue, inputState, soundEnabled, isTimedMode, timeLeft])
 
-  // 物理键盘事件
+  // 跳过当前字
+  const skipCurrentChar = useCallback(() => {
+    if (!isStarted || currentIndex >= queue.length) return
+    setStats(s => ({ ...s, errors: s.errors + 1 }))
+    setCurrentIndex(i => i + 1)
+    setInputBuffer('')
+    setInputState('WAITING')
+  }, [isStarted, currentIndex, queue.length])
+
+  // 物理键盘事件（包含快捷键）
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    // 快捷键
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      setIsStarted(false)
+      return
+    }
+    if (e.key === 'Tab') {
+      e.preventDefault()
+      skipCurrentChar()
+      return
+    }
+    if (e.key === ' ') {
+      e.preventDefault()
+      randomText()
+      return
+    }
+    
+    // 字母输入
     const key = e.key.toLowerCase()
     if (!/^[a-z]$/.test(key)) return
     e.preventDefault()
     handleKeyInput(key)
-  }, [handleKeyInput])
+  }, [handleKeyInput, skipCurrentChar])
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
@@ -206,11 +260,24 @@ export default function Trainer() {
   const current = queue[currentIndex]
   const isComplete = isStarted && (currentIndex >= queue.length || (isTimedMode && timeLeft <= 0))
 
-  // 完成时保存统计
+  const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
+
+  // 完成时保存统计和检查成就
   useEffect(() => {
     if (isComplete && stats.correct > 0) {
       const time = Math.floor((Date.now() - startTimeRef.current) / 1000)
+      const accuracy = (stats.correct / (stats.correct + stats.errors)) * 100
+      const speed = time > 0 ? Math.round(stats.correct / (time / 60)) : 0
+      
       updatePracticeStats(stats.correct, stats.errors, time)
+      saveDailyRecord(stats.correct, stats.errors, time)
+      
+      // 检查成就
+      const unlocked = checkAndUnlockAchievements(accuracy, speed)
+      if (unlocked.length > 0) {
+        setNewAchievements(unlocked)
+        setTimeout(() => setNewAchievements([]), 5000)
+      }
     }
   }, [isComplete])
 
@@ -396,6 +463,37 @@ export default function Trainer() {
             {autoNext && !isTimedMode && (
               <p className="text-purple-400 mt-2 text-sm">1.5秒后自动加载下一段...</p>
             )}
+            {/* 分享按钮 */}
+            <button
+              onClick={() => {
+                const url = getShareUrl()
+                navigator.clipboard.writeText(url)
+                alert('链接已复制！分享给朋友一起练习吧')
+              }}
+              className={`mt-3 px-4 py-1.5 text-sm rounded-lg ${theme.btn}`}
+            >
+              🔗 分享练习
+            </button>
+          </div>
+        )}
+
+        {/* 成就解锁提示 */}
+        {newAchievements.length > 0 && (
+          <div className="fixed top-4 right-4 z-50 space-y-2">
+            {newAchievements.map((a) => (
+              <div
+                key={a.id}
+                className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-3 rounded-xl shadow-lg animate-bounce"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{a.icon}</span>
+                  <div>
+                    <div className="font-bold">🎉 成就解锁！</div>
+                    <div className="text-sm">{a.name} - {a.desc}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
 
@@ -446,6 +544,12 @@ export default function Trainer() {
             >
               {textSource === 'online' ? '🌐 在线' : '📦 本地'}
             </button>
+          </div>
+          {/* 快捷键提示 */}
+          <div className={`mt-3 text-xs ${theme.textMuted} flex flex-wrap gap-3`}>
+            <span><kbd className="px-1.5 py-0.5 bg-gray-600 rounded text-gray-300">Space</kbd> 随机文本</span>
+            <span><kbd className="px-1.5 py-0.5 bg-gray-600 rounded text-gray-300">Tab</kbd> 跳过当前字</span>
+            <span><kbd className="px-1.5 py-0.5 bg-gray-600 rounded text-gray-300">Esc</kbd> 结束练习</span>
           </div>
         </div>
       </div>

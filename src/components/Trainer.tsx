@@ -37,16 +37,46 @@ export default function Trainer() {
   const [learningMode, setLearningMode] = useState<LearningMode>('hint')
   const [timeLeft, setTimeLeft] = useState(60)
   const [isTimedMode, setIsTimedMode] = useState(false)
+  const [timedDuration, setTimedDuration] = useState(60)
   const startTimeRef = useRef<number>(0)
+  const [wrongKey, setWrongKey] = useState<string | null>(null)
+  const [correctKey, setCorrectKey] = useState<string | null>(null)
 
-  // 检查是否首次访问
+  // 从 localStorage 恢复设置
   useEffect(() => {
+    const savedDarkMode = localStorage.getItem('shuangpin_darkMode')
+    const savedSound = localStorage.getItem('shuangpin_sound')
+    const savedMode = localStorage.getItem('shuangpin_mode')
+    const savedSource = localStorage.getItem('shuangpin_source')
+    
+    if (savedDarkMode !== null) setDarkMode(savedDarkMode === 'true')
+    if (savedSound !== null) setSoundEnabled(savedSound === 'true')
+    if (savedMode) setLearningMode(savedMode as LearningMode)
+    if (savedSource) setTextSource(savedSource as 'local' | 'online')
+    
     const visited = localStorage.getItem('shuangpin_visited')
     if (!visited) {
       setShowTutorial(true)
       localStorage.setItem('shuangpin_visited', 'true')
     }
   }, [])
+
+  // 保存设置到 localStorage
+  useEffect(() => {
+    localStorage.setItem('shuangpin_darkMode', String(darkMode))
+  }, [darkMode])
+  
+  useEffect(() => {
+    localStorage.setItem('shuangpin_sound', String(soundEnabled))
+  }, [soundEnabled])
+  
+  useEffect(() => {
+    localStorage.setItem('shuangpin_mode', learningMode)
+  }, [learningMode])
+  
+  useEffect(() => {
+    localStorage.setItem('shuangpin_source', textSource)
+  }, [textSource])
 
   const startPractice = useCallback((text: string) => {
     const q = convertTextToQueue(text)
@@ -121,12 +151,16 @@ export default function Trainer() {
         setInputBuffer(key)
         setInputState('HALF_MATCH')
         setIsError(false)
+        setWrongKey(null)
+        setCorrectKey(null)
       } else {
         if (soundEnabled) playErrorSound()
         setIsError(true)
+        setWrongKey(key)
+        setCorrectKey(target[0])
         setStats(s => ({ ...s, errors: s.errors + 1 }))
         saveErrorRecord(current.char, current.pinyin, current.shuangpin, true)
-        setTimeout(() => setIsError(false), 200)
+        setTimeout(() => { setIsError(false); setWrongKey(null); setCorrectKey(null) }, 500)
       }
     } else if (inputState === 'HALF_MATCH') {
       if (key === target[1]) {
@@ -140,14 +174,18 @@ export default function Trainer() {
         setInputBuffer('')
         setInputState('WAITING')
         setIsError(false)
+        setWrongKey(null)
+        setCorrectKey(null)
       } else {
         if (soundEnabled) playErrorSound()
         setIsError(true)
+        setWrongKey(key)
+        setCorrectKey(target[1])
         setStats(s => ({ ...s, errors: s.errors + 1 }))
         saveErrorRecord(current.char, current.pinyin, current.shuangpin, true)
         setInputBuffer('')
         setInputState('WAITING')
-        setTimeout(() => setIsError(false), 200)
+        setTimeout(() => { setIsError(false); setWrongKey(null); setCorrectKey(null) }, 500)
       }
     }
   }, [isStarted, currentIndex, queue, inputState, soundEnabled, isTimedMode, timeLeft])
@@ -236,39 +274,67 @@ export default function Trainer() {
         </div>
 
         {/* 学习模式选择 */}
-        <div className={`${theme.card} rounded-xl p-3 mb-4 flex flex-wrap gap-2 items-center`}>
+        <div className={`${theme.card} rounded-xl p-2 sm:p-3 mb-4 flex flex-wrap gap-1.5 sm:gap-2 items-center`}>
           <span className={`text-xs sm:text-sm ${theme.textMuted}`}>模式:</span>
           <button
             onClick={() => { setLearningMode('hint'); setIsTimedMode(false) }}
-            className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${learningMode === 'hint' && !isTimedMode ? 'bg-blue-600 text-white' : theme.btn}`}
+            className={`group relative px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${learningMode === 'hint' && !isTimedMode ? 'bg-blue-600 text-white' : theme.btn}`}
+            title="显示拼音和双拼提示，键盘高亮下一个键"
           >
             💡 <span className="hidden sm:inline">提示</span>
           </button>
           <button
             onClick={() => { setLearningMode('blind'); setIsTimedMode(false) }}
             className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${learningMode === 'blind' && !isTimedMode ? 'bg-blue-600 text-white' : theme.btn}`}
+            title="只显示汉字，隐藏双拼提示"
           >
             🙈 <span className="hidden sm:inline">盲打</span>
           </button>
-          <button
-            onClick={() => { setIsTimedMode(true); setTimeLeft(60) }}
-            className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${isTimedMode ? 'bg-orange-600 text-white' : theme.btn}`}
-          >
-            ⏱️ <span className="hidden sm:inline">限时</span>
-          </button>
+          {/* 限时模式 - 可选时长 */}
+          <div className="relative group">
+            <button
+              onClick={() => { setIsTimedMode(true); setTimeLeft(timedDuration) }}
+              className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${isTimedMode ? 'bg-orange-600 text-white' : theme.btn}`}
+              title="限时挑战模式"
+            >
+              ⏱️ <span className="hidden sm:inline">{timedDuration}秒</span>
+            </button>
+            {/* 时长选择下拉 */}
+            <div className={`absolute top-full left-0 mt-1 ${theme.card} rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10`}>
+              {[30, 60, 120, 300].map(sec => (
+                <button
+                  key={sec}
+                  onClick={() => { setTimedDuration(sec); setTimeLeft(sec); setIsTimedMode(true) }}
+                  className={`block w-full px-3 py-1 text-xs text-left hover:bg-blue-500 hover:text-white ${timedDuration === sec ? 'bg-blue-500 text-white' : ''}`}
+                >
+                  {sec < 60 ? `${sec}秒` : `${sec / 60}分钟`}
+                </button>
+              ))}
+            </div>
+          </div>
           <button
             onClick={() => setShowPracticeMode(true)}
             className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${theme.btn}`}
+            title="专项练习特定声母/韵母"
           >
             🎯 <span className="hidden sm:inline">专项</span>
           </button>
+          {/* 限时进度条 */}
           {isTimedMode && isStarted && !isComplete && (
-            <span className={`ml-auto text-base sm:text-lg font-mono ${timeLeft <= 10 ? 'text-red-500' : 'text-orange-400'}`}>
-              {timeLeft}s
-            </span>
+            <div className="ml-auto flex items-center gap-2">
+              <div className={`w-20 sm:w-32 h-2 rounded-full ${darkMode ? 'bg-gray-700' : 'bg-gray-300'}`}>
+                <div 
+                  className={`h-full rounded-full transition-all ${timeLeft <= 10 ? 'bg-red-500' : 'bg-orange-400'}`}
+                  style={{ width: `${(timeLeft / timedDuration) * 100}%` }}
+                />
+              </div>
+              <span className={`text-sm sm:text-lg font-mono ${timeLeft <= 10 ? 'text-red-500' : 'text-orange-400'}`}>
+                {timeLeft}s
+              </span>
+            </div>
           )}
-          {isStarted && !isComplete && (
-            <span className={`ml-2 text-xs sm:text-sm ${theme.textMuted}`}>
+          {isStarted && !isComplete && !isTimedMode && (
+            <span className={`ml-auto text-xs sm:text-sm ${theme.textMuted}`}>
               {getSpeed()}字/分
             </span>
           )}
@@ -282,6 +348,8 @@ export default function Trainer() {
           currentStep={inputState === 'WAITING' ? 0 : 1}
           darkMode={darkMode}
           onKeyClick={handleKeyInput}
+          showWrongKey={wrongKey}
+          correctKey={correctKey}
         />
 
         {/* 当前字信息 */}
@@ -304,6 +372,13 @@ export default function Trainer() {
                 <div className={`text-2xl sm:text-3xl font-mono mt-2 ${isError ? 'text-red-500' : theme.text}`}>
                   {inputBuffer || '_'}
                 </div>
+                {/* 错误提示 */}
+                {isError && wrongKey && correctKey && (
+                  <div className="text-xs sm:text-sm text-red-400 mt-1">
+                    你按了 <span className="font-mono bg-red-900/50 px-1 rounded">{wrongKey}</span>，
+                    正确是 <span className="font-mono bg-green-900/50 px-1 rounded">{correctKey}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>

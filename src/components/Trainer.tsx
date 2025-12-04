@@ -9,6 +9,8 @@ import Keyboard from './Keyboard'
 import Tutorial from './Tutorial'
 import PracticeMode from './PracticeMode'
 import Stats from './Stats'
+import ShuangpinLookup from './ShuangpinLookup'
+import CustomTextModal from './CustomTextModal'
 
 type InputState = 'WAITING' | 'HALF_MATCH'
 type LearningMode = 'normal' | 'hint' | 'blind' | 'timed'
@@ -34,7 +36,10 @@ export default function Trainer() {
   const [showTutorial, setShowTutorial] = useState(false)
   const [showPracticeMode, setShowPracticeMode] = useState(false)
   const [showStats, setShowStats] = useState(false)
+  const [showLookup, setShowLookup] = useState(false)
+  const [showCustomText, setShowCustomText] = useState(false)
   const [learningMode, setLearningMode] = useState<LearningMode>('hint')
+  const [followMode, setFollowMode] = useState(false)
   const [timeLeft, setTimeLeft] = useState(60)
   const [isTimedMode, setIsTimedMode] = useState(false)
   const [timedDuration, setTimedDuration] = useState(60)
@@ -105,7 +110,7 @@ export default function Trainer() {
     localStorage.setItem('shuangpin_source', textSource)
   }, [textSource])
 
-  const startPractice = useCallback((text: string) => {
+  const startPractice = useCallback((text: string, isFollow = false) => {
     const q = convertTextToQueue(text)
     if (q.length === 0) return
     setQueue(q)
@@ -116,8 +121,9 @@ export default function Trainer() {
     setIsStarted(true)
     setStats({ correct: 0, errors: 0 })
     startTimeRef.current = Date.now()
-    if (isTimedMode) setTimeLeft(60)
-  }, [isTimedMode])
+    setFollowMode(isFollow)
+    if (isTimedMode) setTimeLeft(timedDuration)
+  }, [isTimedMode, timedDuration])
 
   const randomLocalText = () => {
     const text = getRandomText()
@@ -328,6 +334,9 @@ export default function Trainer() {
             <button onClick={() => setShowStats(true)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${theme.btn}`} title="统计">
               📊
             </button>
+            <button onClick={() => setShowLookup(true)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${theme.btn}`} title="双拼查询">
+              🔍
+            </button>
             <button onClick={() => setAutoNext(!autoNext)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${autoNext ? 'bg-purple-600 text-white' : theme.btn}`} title="自动下一个">
               {autoNext ? '🔄' : '⏸️'}
             </button>
@@ -535,9 +544,17 @@ export default function Trainer() {
           </div>
         )}
 
-        {/* 文字进度条 */}
+        {/* 文字进度条 / 跟打模式原文 */}
         {isStarted && (
           <div className={`${theme.card} rounded-xl p-4 mt-4`}>
+            {followMode && !isComplete && (
+              <div className={`mb-3 p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+                <div className={`text-xs ${theme.textMuted} mb-1`}>📖 原文（照着打）</div>
+                <div className={`text-lg leading-relaxed ${theme.text}`}>
+                  {inputText}
+                </div>
+              </div>
+            )}
             <div className="flex flex-wrap gap-1 text-lg justify-center">
               {queue.map((item, idx) => (
                 <span
@@ -556,6 +573,7 @@ export default function Trainer() {
             </div>
             <div className={`text-center mt-3 text-sm ${theme.textMuted}`}>
               进度: {currentIndex}/{queue.length} | 正确: {stats.correct} | 错误: {stats.errors}
+              {followMode && <span className="ml-2 text-green-500">📖 跟打模式</span>}
             </div>
           </div>
         )}
@@ -575,6 +593,9 @@ export default function Trainer() {
             </button>
             <button onClick={randomText} disabled={isLoading} className={`px-5 py-2 rounded-lg transition ${theme.btn} ${isLoading ? 'opacity-50' : ''}`}>
               {isLoading ? '⏳ 加载中...' : '🎲 随机文本'}
+            </button>
+            <button onClick={() => setShowCustomText(true)} className={`px-5 py-2 rounded-lg transition ${theme.btn}`}>
+              📝 自定义
             </button>
             <button
               onClick={() => setTextSource(textSource === 'local' ? 'online' : 'local')}
@@ -605,6 +626,19 @@ export default function Trainer() {
         <Stats
           onClose={() => setShowStats(false)}
           onPracticeErrors={(chars) => { setInputText(chars); startPractice(chars) }}
+          darkMode={darkMode}
+        />
+      )}
+      {showLookup && (
+        <ShuangpinLookup onClose={() => setShowLookup(false)} darkMode={darkMode} />
+      )}
+      {showCustomText && (
+        <CustomTextModal
+          onStart={(text, mode) => {
+            setInputText(text)
+            startPractice(text, mode === 'follow')
+          }}
+          onClose={() => setShowCustomText(false)}
           darkMode={darkMode}
         />
       )}

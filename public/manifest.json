@@ -1,21 +1,32 @@
 {
   "name": "小鹤双拼练习器",
   "short_name": "双拼练习",
-  "description": "在线练习小鹤双拼输入法",
+  "description": "在线小鹤双拼打字练习工具，支持离线使用",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#111827",
+  "background_color": "#1f2937",
   "theme_color": "#3b82f6",
+  "orientation": "any",
+  "categories": ["education", "productivity"],
   "icons": [
     {
       "src": "/icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "/icon-512.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "开始练习",
+      "url": "/",
+      "description": "开始双拼打字练习"
     }
   ]
 }

@@ -26,7 +26,7 @@ export default function Trainer() {
   const [darkMode, setDarkMode] = useState(true)
   const [lastPressedKey, setLastPressedKey] = useState<string | null>(null)
   const [keyPressId, setKeyPressId] = useState(0)
-  const [autoNext, setAutoNext] = useState(false)
+  const [autoNext, setAutoNext] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
   const [textSource, setTextSource] = useState<'local' | 'online'>('local')
   

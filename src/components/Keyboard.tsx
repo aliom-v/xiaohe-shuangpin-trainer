@@ -157,27 +157,26 @@ export default function Keyboard({
         ))}
       </div>
       
-      {/* 悬停提示 */}
-      {hoveredKey && keyLabels[hoveredKey] && (
-        <div className={`text-center mt-3 py-2 px-4 rounded-lg ${theme.tooltip} text-sm`}>
-          <span className="font-bold uppercase mr-2">{hoveredKey}</span>
-          <span className={theme.initial}>{keyLabels[hoveredKey].initial || '—'}</span>
-          <span className="mx-1">/</span>
-          <span className={theme.final}>{keyLabels[hoveredKey].final}</span>
-          {keyLabels[hoveredKey].example && (
-            <span className="ml-3 opacity-70">例: {keyLabels[hoveredKey].example}</span>
-          )}
-        </div>
-      )}
-      
-      {/* 图例 */}
-      {!hoveredKey && (
-        <div className={`flex justify-center gap-3 sm:gap-4 md:gap-6 mt-2 sm:mt-3 text-xs sm:text-sm ${theme.legend}`}>
-          <span><span className={`${theme.initial} font-bold`}>■</span> 声母</span>
-          <span><span className={`${theme.final} font-bold`}>■</span> 韵母</span>
-          <span><span className="text-yellow-400 font-bold">■</span> 下一键</span>
-        </div>
-      )}
+      {/* 底部提示区 - 固定高度防止抖动 */}
+      <div className="h-10 sm:h-12 mt-2 sm:mt-3 flex items-center justify-center">
+        {hoveredKey && keyLabels[hoveredKey] ? (
+          <div className={`text-center py-2 px-4 rounded-lg ${theme.tooltip} text-sm`}>
+            <span className="font-bold uppercase mr-2">{hoveredKey}</span>
+            <span className={theme.initial}>{keyLabels[hoveredKey].initial || '—'}</span>
+            <span className="mx-1">/</span>
+            <span className={theme.final}>{keyLabels[hoveredKey].final}</span>
+            {keyLabels[hoveredKey].example && (
+              <span className="ml-3 opacity-70">例: {keyLabels[hoveredKey].example}</span>
+            )}
+          </div>
+        ) : (
+          <div className={`flex justify-center gap-3 sm:gap-4 md:gap-6 text-xs sm:text-sm ${theme.legend}`}>
+            <span><span className={`${theme.initial} font-bold`}>■</span> 声母</span>
+            <span><span className={`${theme.final} font-bold`}>■</span> 韵母</span>
+            <span><span className="text-yellow-400 font-bold">■</span> 下一键</span>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

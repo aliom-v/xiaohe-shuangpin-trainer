@@ -37,7 +37,7 @@ npm run dev
 
 推荐使用 Vercel 一键部署：
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/aliom/xiaohe-shuangpin-trainer)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/aliom-v/xiaohe-shuangpin-trainer)
 
 ## License
 

@@ -2,6 +2,8 @@
 
 一个功能丰富的小鹤双拼在线练习工具。
 
+**在线体验：** [https://xiaohe-shuangpin-trainer.vercel.app](https://xiaohe-shuangpin-trainer.vercel.app)
+
 ## 功能特性
 
 - 🎹 可视化键盘，实时高亮下一个键位
@@ -35,7 +37,7 @@ npm run dev
 
 推荐使用 Vercel 一键部署：
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/你的用户名/xiaohe-shuangpin)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/aliom/xiaohe-shuangpin-trainer)
 
 ## License
 

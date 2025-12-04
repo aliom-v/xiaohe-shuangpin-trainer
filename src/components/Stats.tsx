@@ -78,7 +78,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className={`${theme.card} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-auto`}>
+      <div className={`${theme.card} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-auto scrollbar-hide`}>
         {/* 头部 */}
         <div className={`p-4 sm:p-6 border-b ${theme.border} flex justify-between items-center`}>
           <h2 className={`text-xl sm:text-2xl font-bold ${theme.text}`}>练习统计</h2>
@@ -171,7 +171,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
                       <div key={key} className={`${darkMode ? 'bg-yellow-900/30' : 'bg-yellow-100'} px-3 py-2 rounded-lg`}>
                         <span className="font-mono text-lg">{key}</span>
                         <span className={`text-xs ml-2 ${theme.textMuted}`}>
-                          ({getFinalName(key)}) {count}次
+                          {getFinalName(key)} {count}次
                         </span>
                       </div>
                     ))}

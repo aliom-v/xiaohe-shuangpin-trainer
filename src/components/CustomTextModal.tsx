@@ -63,7 +63,7 @@ export default function CustomTextModal({ onStart, onClose, darkMode }: CustomTe
                 <button
                   key={i}
                   onClick={() => setText(ex.text)}
-                  className={`px-3 py-1 text-sm rounded-lg ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} ${theme.text}`}
+                  className={`px-3 py-1 text-sm rounded-lg ${theme.btnSecondary}`}
                 >
                   {ex.label}
                 </button>
@@ -78,7 +78,7 @@ export default function CustomTextModal({ onStart, onClose, darkMode }: CustomTe
               <button
                 onClick={() => setMode('normal')}
                 className={`flex-1 py-2 rounded-lg text-sm transition ${
-                  mode === 'normal' ? 'bg-blue-600 text-white' : darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
+                  mode === 'normal' ? 'bg-blue-600 text-white' : theme.btnSecondary
                 }`}
               >
                 💡 普通模式
@@ -87,7 +87,7 @@ export default function CustomTextModal({ onStart, onClose, darkMode }: CustomTe
               <button
                 onClick={() => setMode('follow')}
                 className={`flex-1 py-2 rounded-lg text-sm transition ${
-                  mode === 'follow' ? 'bg-green-600 text-white' : darkMode ? 'bg-gray-700 text-gray-300' : 'bg-gray-200 text-gray-700'
+                  mode === 'follow' ? 'bg-green-600 text-white' : theme.btnSecondary
                 }`}
               >
                 📖 跟打模式

@@ -86,7 +86,7 @@ export default function ShuangpinLookup({ onClose, darkMode }: ShuangpinLookupPr
           ) : results.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {results.map((r, i) => (
-                <div key={i} className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg p-3 text-center`}>
+                <div key={i} className={`${theme.statCard} rounded-lg p-3 text-center`}>
                   <div className={`text-lg ${theme.text}`}>{r.pinyin}</div>
                   <div className="text-2xl font-mono text-blue-500 font-bold">{r.shuangpin}</div>
                   <div className={`text-xs ${theme.textMuted}`}>
@@ -103,7 +103,7 @@ export default function ShuangpinLookup({ onClose, darkMode }: ShuangpinLookupPr
                 <h3 className={`font-bold mb-2 ${theme.text}`}>声母对照</h3>
                 <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 text-sm">
                   {Object.entries(initialMap).map(([py, key]) => (
-                    <div key={py} className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded p-2 text-center`}>
+                    <div key={py} className={`${theme.statCard} rounded p-2 text-center`}>
                       <span className={theme.textMuted}>{py}</span>
                       <span className="mx-1">→</span>
                       <span className="text-blue-500 font-mono font-bold">{key}</span>
@@ -117,7 +117,7 @@ export default function ShuangpinLookup({ onClose, darkMode }: ShuangpinLookupPr
                 <h3 className={`font-bold mb-2 ${theme.text}`}>韵母对照</h3>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-sm">
                   {Object.entries(finalMap).map(([py, key]) => (
-                    <div key={py} className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded p-2 text-center`}>
+                    <div key={py} className={`${theme.statCard} rounded p-2 text-center`}>
                       <span className={theme.textMuted}>{py}</span>
                       <span className="mx-1">→</span>
                       <span className="text-green-500 font-mono font-bold">{key}</span>
@@ -131,7 +131,7 @@ export default function ShuangpinLookup({ onClose, darkMode }: ShuangpinLookupPr
                 <h3 className={`font-bold mb-2 ${theme.text}`}>零声母（特殊）</h3>
                 <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-sm">
                   {Object.entries(specialSyllables).map(([py, key]) => (
-                    <div key={py} className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded p-2 text-center`}>
+                    <div key={py} className={`${theme.statCard} rounded p-2 text-center`}>
                       <span className={theme.textMuted}>{py}</span>
                       <span className="mx-1">→</span>
                       <span className="text-orange-500 font-mono font-bold">{key}</span>

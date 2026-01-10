@@ -100,7 +100,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
             <>
               {/* 智能推荐 */}
               {recommendation && (
-                <div className={`mb-4 p-3 rounded-lg ${darkMode ? 'bg-blue-900/30' : 'bg-blue-100'} border border-blue-500/30`}>
+                <div className={`mb-4 p-3 rounded-lg ${theme.highlightBlue}`}>
                   <div className="flex items-center gap-2">
                     <span>💡</span>
                     <span className={theme.text}>{recommendation.reason}</span>
@@ -127,7 +127,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
                 <>
                   <div className="flex flex-wrap gap-2 mb-4">
                     {errors.map((e, i) => (
-                      <div key={i} className={`${darkMode ? 'bg-red-900/30' : 'bg-red-100'} px-3 py-2 rounded-lg`}>
+                      <div key={i} className={`${theme.highlightRed} px-3 py-2 rounded-lg`}>
                         <span className="text-xl">{e.char}</span>
                         <span className={`text-xs ml-2 ${theme.textMuted}`}>
                           {e.pinyin}→{e.shuangpin} ({e.errorCount}次)
@@ -154,7 +154,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
                     .sort((a, b) => b[1] - a[1])
                     .slice(0, 8)
                     .map(([key, count]) => (
-                      <div key={key} className={`${darkMode ? 'bg-yellow-900/30' : 'bg-yellow-100'} px-3 py-2 rounded-lg`}>
+                      <div key={key} className={`${theme.highlightYellow} px-3 py-2 rounded-lg`}>
                         <span className="font-mono text-lg">{key}</span>
                         <span className={`text-xs ml-2 ${theme.textMuted}`}>
                           {getFinalName(key)} {count}次
@@ -213,9 +213,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
                 <div
                   key={a.id}
                   className={`p-3 rounded-lg text-center transition ${
-                    a.unlocked
-                      ? darkMode ? 'bg-green-900/30 border border-green-500/30' : 'bg-green-100 border border-green-300'
-                      : darkMode ? 'bg-gray-700/50 opacity-50' : 'bg-gray-200 opacity-50'
+                    a.unlocked ? theme.highlightGreen : theme.achievementLocked
                   }`}
                 >
                   <div className="text-2xl mb-1">{a.icon}</div>
@@ -254,6 +252,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
 }
 
 function StatCard({ label, value, color, darkMode }: { label: string; value: string | number; color: string; darkMode: boolean }) {
+  const theme = useTheme(darkMode)
   const colors: Record<string, string> = {
     blue: 'text-blue-500',
     green: 'text-green-500',
@@ -261,9 +260,9 @@ function StatCard({ label, value, color, darkMode }: { label: string; value: str
     orange: 'text-orange-500',
   }
   return (
-    <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-xl p-3 sm:p-4 text-center`}>
+    <div className={`${theme.statCard} rounded-xl p-3 sm:p-4 text-center`}>
       <div className={`text-2xl sm:text-3xl font-bold ${colors[color]}`}>{value}</div>
-      <div className={`text-xs sm:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{label}</div>
+      <div className={`text-xs sm:text-sm ${theme.textMuted}`}>{label}</div>
     </div>
   )
 }

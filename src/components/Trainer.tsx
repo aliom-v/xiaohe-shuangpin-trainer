@@ -605,7 +605,7 @@ export default function Trainer() {
           {/* 限时进度条 */}
           {isTimedMode && isStarted && !isComplete && (
             <div className="ml-auto flex items-center gap-2">
-              <div className={`w-20 sm:w-32 h-2 rounded-full ${darkMode ? 'bg-gray-700' : 'bg-gray-300'}`}>
+              <div className={`w-20 sm:w-32 h-2 rounded-full ${theme.bar}`}>
                 <div 
                   className={`h-full rounded-full transition-all ${timeLeft <= 10 ? 'bg-red-500' : 'bg-orange-400'}`}
                   style={{ width: `${(timeLeft / timedDuration) * 100}%` }}
@@ -727,21 +727,21 @@ export default function Trainer() {
             
             {/* 详细统计卡片 */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
-              <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg p-3 text-center`}>
+              <div className={`${theme.statCard} rounded-lg p-3 text-center`}>
                 <div className="text-2xl font-bold text-blue-500">{stats.correct}</div>
                 <div className={`text-xs ${theme.textMuted}`}>正确字数</div>
               </div>
-              <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg p-3 text-center`}>
+              <div className={`${theme.statCard} rounded-lg p-3 text-center`}>
                 <div className="text-2xl font-bold text-red-500">{stats.errors}</div>
                 <div className={`text-xs ${theme.textMuted}`}>错误次数</div>
               </div>
-              <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg p-3 text-center`}>
+              <div className={`${theme.statCard} rounded-lg p-3 text-center`}>
                 <div className="text-2xl font-bold text-green-500">
                   {stats.correct + stats.errors > 0 ? ((stats.correct / (stats.correct + stats.errors)) * 100).toFixed(1) : 0}%
                 </div>
                 <div className={`text-xs ${theme.textMuted}`}>准确率</div>
               </div>
-              <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg p-3 text-center`}>
+              <div className={`${theme.statCard} rounded-lg p-3 text-center`}>
                 <div className="text-2xl font-bold text-purple-500">{getSpeed()}</div>
                 <div className={`text-xs ${theme.textMuted}`}>字/分钟</div>
               </div>
@@ -749,7 +749,7 @@ export default function Trainer() {
 
             {/* 学习建议 */}
             {stats.errors > stats.correct * 0.3 && (
-              <div className={`${darkMode ? 'bg-yellow-900/20' : 'bg-yellow-100'} rounded-lg p-3 mb-4 text-sm`}>
+              <div className={`${theme.highlightYellow} rounded-lg p-3 mb-4 text-sm`}>
                 💡 <span className={theme.textMuted}>建议：错误率较高，可以试试</span>
                 <button onClick={() => setShowPracticeMode(true)} className="text-blue-500 ml-1 underline">专项练习</button>
                 <span className={theme.textMuted}>，针对薄弱环节强化</span>
@@ -806,7 +806,7 @@ export default function Trainer() {
         {isStarted && (
           <div className={`${theme.card} rounded-xl p-4 mt-4`}>
             {followMode && !isComplete && (
-              <div className={`mb-3 p-3 rounded-lg ${darkMode ? 'bg-gray-700' : 'bg-gray-100'}`}>
+              <div className={`mb-3 p-3 rounded-lg ${theme.codeBlock}`}>
                 <div className={`text-xs ${theme.textMuted} mb-1`}>📖 原文（照着打）</div>
                 <div className={`text-lg leading-relaxed ${theme.text}`}>
                   {inputText}
@@ -865,9 +865,9 @@ export default function Trainer() {
           </div>
           {/* 快捷键提示 */}
           <div className={`mt-3 text-xs ${theme.textMuted} flex flex-wrap gap-3`}>
-            <span><kbd className="px-1.5 py-0.5 bg-gray-600 rounded text-gray-300">Space</kbd> 随机文本</span>
-            <span><kbd className="px-1.5 py-0.5 bg-gray-600 rounded text-gray-300">Tab</kbd> 跳过当前字</span>
-            <span><kbd className="px-1.5 py-0.5 bg-gray-600 rounded text-gray-300">Esc</kbd> 结束练习</span>
+            <span><kbd className={`px-1.5 py-0.5 rounded ${theme.kbd}`}>Space</kbd> 随机文本</span>
+            <span><kbd className={`px-1.5 py-0.5 rounded ${theme.kbd}`}>Tab</kbd> 跳过当前字</span>
+            <span><kbd className={`px-1.5 py-0.5 rounded ${theme.kbd}`}>Esc</kbd> 结束练习</span>
           </div>
         </div>
       </div>

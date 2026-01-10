@@ -65,7 +65,7 @@ export default function Tutorial({ onClose, darkMode }: TutorialProps) {
               <div
                 key={i}
                 className={`h-2 flex-1 rounded-full transition-colors ${
-                  i <= step ? 'bg-blue-500' : darkMode ? 'bg-gray-700' : 'bg-gray-300'
+                  i <= step ? 'bg-blue-500' : theme.progressInactive
                 }`}
               />
             ))}
@@ -76,7 +76,7 @@ export default function Tutorial({ onClose, darkMode }: TutorialProps) {
         <div className="p-6">
           <h3 className={`text-xl font-bold mb-4 ${theme.text}`}>{currentStep.title}</h3>
           <p className={`${theme.textMuted} mb-4 whitespace-pre-line`}>{currentStep.content}</p>
-          <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg p-4 font-mono text-sm whitespace-pre-line ${theme.text}`}>
+          <div className={`${theme.codeBlock} rounded-lg p-4 font-mono text-sm whitespace-pre-line ${theme.text}`}>
             {currentStep.example}
           </div>
 
@@ -96,7 +96,7 @@ export default function Tutorial({ onClose, darkMode }: TutorialProps) {
               {/* 声母表 */}
               <div>
                 <h4 className={`font-bold mb-2 ${theme.text}`}>声母表</h4>
-                <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg p-3 text-xs`}>
+                <div className={`${theme.codeBlock} rounded-lg p-3 text-xs`}>
                   {Object.entries(initialMap).map(([k, v]) => (
                     <span key={k} className={`inline-block mr-3 ${theme.text}`}>
                       {k}→<span className="text-blue-400">{v}</span>
@@ -107,7 +107,7 @@ export default function Tutorial({ onClose, darkMode }: TutorialProps) {
               {/* 韵母表 */}
               <div>
                 <h4 className={`font-bold mb-2 ${theme.text}`}>韵母表</h4>
-                <div className={`${darkMode ? 'bg-gray-700' : 'bg-gray-100'} rounded-lg p-3 text-xs`}>
+                <div className={`${theme.codeBlock} rounded-lg p-3 text-xs`}>
                   {Object.entries(finalMap).map(([k, v]) => (
                     <span key={k} className={`inline-block mr-3 ${theme.text}`}>
                       {k}→<span className="text-green-400">{v}</span>
@@ -124,7 +124,7 @@ export default function Tutorial({ onClose, darkMode }: TutorialProps) {
           <button
             onClick={() => setStep(s => s - 1)}
             disabled={step === 0}
-            className={`px-6 py-2 rounded-lg transition ${step === 0 ? 'opacity-50 cursor-not-allowed' : ''} ${darkMode ? 'bg-gray-700 hover:bg-gray-600' : 'bg-gray-200 hover:bg-gray-300'} ${theme.text}`}
+            className={`px-6 py-2 rounded-lg transition ${step === 0 ? 'opacity-50 cursor-not-allowed' : ''} ${theme.btnSecondary}`}
           >
             上一步
           </button>

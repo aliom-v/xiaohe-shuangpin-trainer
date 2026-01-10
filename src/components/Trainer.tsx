@@ -1,36 +1,51 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { CharInfo } from '@/lib/xiaohe'
+import dynamic from 'next/dynamic'
+import { CharInfo, parsePinyinParts, pinyinToShuangpin } from '@/lib/xiaohe'
 import { convertTextToQueue, getRandomText } from '@/lib/converter'
-import { playKeySound, playSuccessSound, playErrorSound, playCompleteSound } from '@/lib/sound'
+import { playKeySound, playSuccessSound, playErrorSound, getSoundPacks, activateAudio } from '@/lib/sound'
 import { saveErrorRecord, updatePracticeStats, saveDailyRecord, checkAndUnlockAchievements, Achievement } from '@/lib/learning'
+import { useTrainerSettings } from '@/hooks/useTrainerSettings'
 import Keyboard from './Keyboard'
-import Tutorial from './Tutorial'
-import PracticeMode from './PracticeMode'
-import Stats from './Stats'
-import ShuangpinLookup from './ShuangpinLookup'
-import CustomTextModal from './CustomTextModal'
-
-type InputState = 'WAITING' | 'HALF_MATCH'
-type LearningMode = 'normal' | 'hint' | 'blind' | 'timed'
+const Tutorial = dynamic(() => import('./Tutorial'), { ssr: false })
+const PracticeMode = dynamic(() => import('./PracticeMode'), { ssr: false })
+const Stats = dynamic(() => import('./Stats'), { ssr: false })
+const ShuangpinLookup = dynamic(() => import('./ShuangpinLookup'), { ssr: false })
+const CustomTextModal = dynamic(() => import('./CustomTextModal'), { ssr: false })
 
 export default function Trainer() {
   const [inputText, setInputText] = useState('')
   const [queue, setQueue] = useState<CharInfo[]>([])
   const [currentIndex, setCurrentIndex] = useState(0)
-  const [inputState, setInputState] = useState<InputState>('WAITING')
   const [inputBuffer, setInputBuffer] = useState('')
   const [isError, setIsError] = useState(false)
   const [isStarted, setIsStarted] = useState(false)
   const [stats, setStats] = useState({ correct: 0, errors: 0 })
-  const [soundEnabled, setSoundEnabled] = useState(true)
-  const [darkMode, setDarkMode] = useState(true)
+  const {
+    darkMode,
+    setDarkMode,
+    soundEnabled,
+    setSoundEnabled,
+    soundPackId,
+    setSoundPackId,
+    keyVolume,
+    setKeyVolume,
+    successVolume,
+    setSuccessVolume,
+    errorVolume,
+    setErrorVolume,
+    learningMode,
+    setLearningMode,
+    textSource,
+    setTextSource,
+    allowShortFullPinyin,
+    setAllowShortFullPinyin,
+  } = useTrainerSettings()
   const [lastPressedKey, setLastPressedKey] = useState<string | null>(null)
   const [keyPressId, setKeyPressId] = useState(0)
   const [autoNext, setAutoNext] = useState(true)
   const [isLoading, setIsLoading] = useState(false)
-  const [textSource, setTextSource] = useState<'local' | 'online'>('local')
   
   // 学习功能状态
   const [showTutorial, setShowTutorial] = useState(false)
@@ -38,7 +53,6 @@ export default function Trainer() {
   const [showStats, setShowStats] = useState(false)
   const [showLookup, setShowLookup] = useState(false)
   const [showCustomText, setShowCustomText] = useState(false)
-  const [learningMode, setLearningMode] = useState<LearningMode>('hint')
   const [followMode, setFollowMode] = useState(false)
   const [timeLeft, setTimeLeft] = useState(60)
   const [isTimedMode, setIsTimedMode] = useState(false)
@@ -46,8 +60,11 @@ export default function Trainer() {
   const startTimeRef = useRef<number>(0)
   const [wrongKey, setWrongKey] = useState<string | null>(null)
   const [correctKey, setCorrectKey] = useState<string | null>(null)
+  const [isEditingPinyin, setIsEditingPinyin] = useState(false)
+  const [pinyinDraft, setPinyinDraft] = useState('')
+  const [pinyinEditError, setPinyinEditError] = useState('')
 
-  // 从 URL 参数或 localStorage 恢复设置
+  // 从 URL 参数恢复设置
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
     const urlText = params.get('text')
@@ -66,23 +83,25 @@ export default function Trainer() {
       setTimeLeft(parseInt(urlTimed) || 60)
     }
     
-    // localStorage
-    const savedDarkMode = localStorage.getItem('shuangpin_darkMode')
-    const savedSound = localStorage.getItem('shuangpin_sound')
-    const savedMode = localStorage.getItem('shuangpin_mode')
-    const savedSource = localStorage.getItem('shuangpin_source')
-    
-    if (savedDarkMode !== null) setDarkMode(savedDarkMode === 'true')
-    if (savedSound !== null) setSoundEnabled(savedSound === 'true')
-    if (!urlMode && savedMode) setLearningMode(savedMode as LearningMode)
-    if (savedSource) setTextSource(savedSource as 'local' | 'online')
-    
     const visited = localStorage.getItem('shuangpin_visited')
     if (!visited) {
       setShowTutorial(true)
       localStorage.setItem('shuangpin_visited', 'true')
     }
   }, [])
+
+  useEffect(() => {
+    if (!soundEnabled) return
+    const handleFirstInteraction = () => {
+      activateAudio()
+    }
+    window.addEventListener('pointerdown', handleFirstInteraction, { once: true })
+    window.addEventListener('keydown', handleFirstInteraction, { once: true })
+    return () => {
+      window.removeEventListener('pointerdown', handleFirstInteraction)
+      window.removeEventListener('keydown', handleFirstInteraction)
+    }
+  }, [soundEnabled])
   
   // 生成分享链接
   const getShareUrl = () => {
@@ -93,31 +112,84 @@ export default function Trainer() {
     return `${window.location.origin}${window.location.pathname}?${params.toString()}`
   }
 
-  // 保存设置到 localStorage
-  useEffect(() => {
-    localStorage.setItem('shuangpin_darkMode', String(darkMode))
-  }, [darkMode])
-  
-  useEffect(() => {
-    localStorage.setItem('shuangpin_sound', String(soundEnabled))
-  }, [soundEnabled])
-  
-  useEffect(() => {
-    localStorage.setItem('shuangpin_mode', learningMode)
-  }, [learningMode])
-  
-  useEffect(() => {
-    localStorage.setItem('shuangpin_source', textSource)
-  }, [textSource])
+  const normalizePinyinInput = useCallback((raw: string) => {
+    return raw.trim().toLowerCase().replace('u:', 'v').replace('ü', 'v')
+  }, [])
+
+  const applyPinyinEdit = useCallback((index: number, raw: string) => {
+    const normalized = normalizePinyinInput(raw)
+    if (!normalized || !/^[a-z]+$/.test(normalized)) {
+      setPinyinEditError('请输入正确的拼音（仅字母）')
+      return
+    }
+    const { initial, final } = parsePinyinParts(normalized)
+    const shuangpin = pinyinToShuangpin(normalized, initial, final)
+    if (shuangpin.length !== 2) {
+      setPinyinEditError('未识别的拼音，无法生成双拼')
+      return
+    }
+    setQueue(q => q.map((item, i) => (
+      i === index
+        ? {
+            ...item,
+            pinyin: normalized,
+            initial,
+            final,
+            shuangpin,
+            pinyinSource: item.autoPinyin === normalized ? 'auto' : 'manual',
+          }
+        : item
+    )))
+    setIsEditingPinyin(false)
+    setPinyinDraft('')
+    setPinyinEditError('')
+    setInputBuffer('')
+    setIsError(false)
+    setWrongKey(null)
+    setCorrectKey(null)
+  }, [normalizePinyinInput])
+
+  const resetPinyinEdit = useCallback((index: number) => {
+    setQueue(q => q.map((item, i) => {
+      if (i !== index || !item.autoPinyin) return item
+      const normalized = normalizePinyinInput(item.autoPinyin)
+      const { initial, final } = parsePinyinParts(normalized)
+      return {
+        ...item,
+        pinyin: normalized,
+        initial,
+        final,
+        shuangpin: pinyinToShuangpin(normalized, initial, final),
+        pinyinSource: 'auto',
+      }
+    }))
+    setIsEditingPinyin(false)
+    setPinyinDraft('')
+    setPinyinEditError('')
+    setInputBuffer('')
+    setIsError(false)
+    setWrongKey(null)
+    setCorrectKey(null)
+  }, [normalizePinyinInput])
+
+  const openPinyinEditor = useCallback((currentPinyin: string) => {
+    setIsEditingPinyin(true)
+    setPinyinDraft(currentPinyin)
+    setPinyinEditError('')
+  }, [])
 
   const startPractice = useCallback((text: string, isFollow = false) => {
     const q = convertTextToQueue(text)
     if (q.length === 0) return
     setQueue(q)
     setCurrentIndex(0)
-    setInputState('WAITING')
     setInputBuffer('')
     setIsError(false)
+    setWrongKey(null)
+    setCorrectKey(null)
+    setIsEditingPinyin(false)
+    setPinyinDraft('')
+    setPinyinEditError('')
     setIsStarted(true)
     setStats({ correct: 0, errors: 0 })
     startTimeRef.current = Date.now()
@@ -171,57 +243,56 @@ export default function Trainer() {
   const handleKeyInput = useCallback((key: string) => {
     if (!isStarted || currentIndex >= queue.length) return
     if (isTimedMode && timeLeft <= 0) return
-    
+
     const current = queue[currentIndex]
-    const target = current.shuangpin
+    const target = current.shuangpin.toLowerCase()
+    const fullPinyin = current.pinyin.toLowerCase()
+    const allowFullPinyin = allowShortFullPinyin && fullPinyin.length <= 2
+    const allowedSequences = allowFullPinyin ? [target, fullPinyin] : [target]
+    const nextBuffer = `${inputBuffer}${key}`.toLowerCase()
+    const matches = allowedSequences.filter(seq => seq.startsWith(nextBuffer))
 
     setLastPressedKey(key)
     setKeyPressId(id => id + 1)
 
-    if (inputState === 'WAITING') {
-      if (key === target[0]) {
-        if (soundEnabled) playKeySound()
-        setInputBuffer(key)
-        setInputState('HALF_MATCH')
+    if (matches.length === 0) {
+      const expectedIndex = Math.min(inputBuffer.length, target.length - 1)
+      if (soundEnabled) playErrorSound()
+      setIsError(true)
+      setWrongKey(key)
+      setCorrectKey(target[expectedIndex])
+      setStats(s => ({ ...s, errors: s.errors + 1 }))
+      saveErrorRecord(current.char, current.pinyin, current.shuangpin, true)
+      setInputBuffer('')
+      setTimeout(() => {
         setIsError(false)
         setWrongKey(null)
         setCorrectKey(null)
-      } else {
-        if (soundEnabled) playErrorSound()
-        setIsError(true)
-        setWrongKey(key)
-        setCorrectKey(target[0])
-        setStats(s => ({ ...s, errors: s.errors + 1 }))
-        saveErrorRecord(current.char, current.pinyin, current.shuangpin, true)
-        setTimeout(() => { setIsError(false); setWrongKey(null); setCorrectKey(null) }, 500)
-      }
-    } else if (inputState === 'HALF_MATCH') {
-      if (key === target[1]) {
-        const isLastChar = currentIndex === queue.length - 1
-        if (soundEnabled) {
-          isLastChar ? playCompleteSound() : playSuccessSound()
-        }
-        setStats(s => ({ ...s, correct: s.correct + 1 }))
-        saveErrorRecord(current.char, current.pinyin, current.shuangpin, false)
-        setCurrentIndex(i => i + 1)
-        setInputBuffer('')
-        setInputState('WAITING')
-        setIsError(false)
-        setWrongKey(null)
-        setCorrectKey(null)
-      } else {
-        if (soundEnabled) playErrorSound()
-        setIsError(true)
-        setWrongKey(key)
-        setCorrectKey(target[1])
-        setStats(s => ({ ...s, errors: s.errors + 1 }))
-        saveErrorRecord(current.char, current.pinyin, current.shuangpin, true)
-        setInputBuffer('')
-        setInputState('WAITING')
-        setTimeout(() => { setIsError(false); setWrongKey(null); setCorrectKey(null) }, 500)
-      }
+      }, 500)
+      return
     }
-  }, [isStarted, currentIndex, queue, inputState, soundEnabled, isTimedMode, timeLeft])
+
+    const isComplete = matches.some(seq => seq.length === nextBuffer.length)
+    if (isComplete) {
+      if (soundEnabled) {
+        playSuccessSound()
+      }
+      setStats(s => ({ ...s, correct: s.correct + 1 }))
+      saveErrorRecord(current.char, current.pinyin, current.shuangpin, false)
+      setCurrentIndex(i => i + 1)
+      setInputBuffer('')
+      setIsError(false)
+      setWrongKey(null)
+      setCorrectKey(null)
+      return
+    }
+
+    if (soundEnabled) playKeySound()
+    setInputBuffer(nextBuffer)
+    setIsError(false)
+    setWrongKey(null)
+    setCorrectKey(null)
+  }, [isStarted, currentIndex, queue, inputBuffer, soundEnabled, isTimedMode, timeLeft, allowShortFullPinyin])
 
   // 跳过当前字
   const skipCurrentChar = useCallback(() => {
@@ -229,11 +300,18 @@ export default function Trainer() {
     setStats(s => ({ ...s, errors: s.errors + 1 }))
     setCurrentIndex(i => i + 1)
     setInputBuffer('')
-    setInputState('WAITING')
+    setIsError(false)
+    setWrongKey(null)
+    setCorrectKey(null)
   }, [isStarted, currentIndex, queue.length])
 
   // 物理键盘事件（包含快捷键）
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    const target = e.target as HTMLElement | null
+    if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT' || target.isContentEditable)) {
+      return
+    }
+
     // 快捷键
     if (e.key === 'Escape') {
       e.preventDefault()
@@ -250,13 +328,23 @@ export default function Trainer() {
       randomText()
       return
     }
+
+    if (e.key === 'Backspace') {
+      if (!isStarted || inputBuffer.length === 0) return
+      e.preventDefault()
+      setInputBuffer(buffer => buffer.slice(0, -1))
+      setIsError(false)
+      setWrongKey(null)
+      setCorrectKey(null)
+      return
+    }
     
     // 字母输入
     const key = e.key.toLowerCase()
     if (!/^[a-z]$/.test(key)) return
     e.preventDefault()
     handleKeyInput(key)
-  }, [handleKeyInput, skipCurrentChar])
+  }, [handleKeyInput, inputBuffer.length, isStarted, skipCurrentChar])
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown)
@@ -265,6 +353,11 @@ export default function Trainer() {
 
   const current = queue[currentIndex]
   const isComplete = isStarted && (currentIndex >= queue.length || (isTimedMode && timeLeft <= 0))
+  const showHintKeys = !!current
+    && !isComplete
+    && learningMode === 'hint'
+    && (!inputBuffer || current.shuangpin.startsWith(inputBuffer))
+  const targetKeys = showHintKeys ? [current.shuangpin[0], current.shuangpin[1]] as [string, string] : null
 
   const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
 
@@ -294,6 +387,12 @@ export default function Trainer() {
       return () => clearTimeout(timer)
     }
   }, [isComplete, autoNext, textSource, isTimedMode])
+  
+  useEffect(() => {
+    setIsEditingPinyin(false)
+    setPinyinDraft('')
+    setPinyinEditError('')
+  }, [currentIndex])
 
   const theme = darkMode ? {
     bg: 'bg-gray-900',
@@ -395,6 +494,81 @@ export default function Trainer() {
           >
             🎯 <span className="hidden sm:inline">专项</span>
           </button>
+          <button
+            onClick={() => setAllowShortFullPinyin(s => !s)}
+            className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${allowShortFullPinyin ? 'bg-green-600 text-white' : theme.btn}`}
+            title="允许 1-2 字母全拼输入"
+          >
+            🔤 <span className="hidden sm:inline">1-2全拼</span>
+          </button>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className={`text-[10px] sm:text-xs ${theme.textMuted}`}>音效</span>
+            <select
+              value={soundPackId}
+              onChange={(e) => setSoundPackId(e.target.value)}
+              className={`px-2 py-1 rounded-lg text-xs sm:text-sm border ${theme.input} ${theme.text}`}
+              title="选择键盘音效包"
+            >
+              {getSoundPacks().map(pack => (
+                <option key={pack.id} value={pack.id}>{pack.name}</option>
+              ))}
+            </select>
+            <button
+              onClick={() => { if (soundEnabled) playKeySound() }}
+              className={`px-2 py-1 rounded-lg text-xs sm:text-sm transition ${theme.btn}`}
+              title="试听当前音效"
+            >
+              ▶
+            </button>
+            <div className="flex items-center gap-1">
+              <span className={`text-[10px] sm:text-xs ${theme.textMuted}`}>键音</span>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                step="0.05"
+                value={keyVolume}
+                onChange={(e) => setKeyVolume(Number(e.target.value))}
+                className="w-16 sm:w-20 accent-blue-500"
+                title="调整键音音量"
+              />
+              <span className={`text-[10px] sm:text-xs ${theme.textMuted} w-9 text-right`}>
+                {Math.round(keyVolume * 100)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className={`text-[10px] sm:text-xs ${theme.textMuted}`}>成功</span>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                step="0.05"
+                value={successVolume}
+                onChange={(e) => setSuccessVolume(Number(e.target.value))}
+                className="w-16 sm:w-20 accent-green-500"
+                title="调整成功音量"
+              />
+              <span className={`text-[10px] sm:text-xs ${theme.textMuted} w-9 text-right`}>
+                {Math.round(successVolume * 100)}%
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <span className={`text-[10px] sm:text-xs ${theme.textMuted}`}>错误</span>
+              <input
+                type="range"
+                min="0"
+                max="2"
+                step="0.05"
+                value={errorVolume}
+                onChange={(e) => setErrorVolume(Number(e.target.value))}
+                className="w-16 sm:w-20 accent-red-500"
+                title="调整错误音量"
+              />
+              <span className={`text-[10px] sm:text-xs ${theme.textMuted} w-9 text-right`}>
+                {Math.round(errorVolume * 100)}%
+              </span>
+            </div>
+          </div>
           {/* 限时进度条 */}
           {isTimedMode && isStarted && !isComplete && (
             <div className="ml-auto flex items-center gap-2">
@@ -420,8 +594,8 @@ export default function Trainer() {
         <Keyboard
           activeKey={lastPressedKey}
           key={keyPressId}
-          targetKeys={current && !isComplete && learningMode === 'hint' ? [current.shuangpin[0], current.shuangpin[1]] : null}
-          currentStep={inputState === 'WAITING' ? 0 : 1}
+          targetKeys={targetKeys}
+          currentStep={inputBuffer.length === 0 ? 0 : 1}
           darkMode={darkMode}
           onKeyClick={handleKeyInput}
           showWrongKey={wrongKey}
@@ -434,9 +608,59 @@ export default function Trainer() {
             <div className="flex items-center justify-center gap-4 sm:gap-8">
               <div className="text-4xl sm:text-6xl">{current.char}</div>
               <div className="text-left">
-                <div className={`text-sm sm:text-base ${theme.textMuted}`}>
-                  拼音: <span className={theme.text}>{current.pinyin}</span>
+                <div className={`text-sm sm:text-base ${theme.textMuted} flex items-center gap-2`}>
+                  <span>拼音:</span>
+                  <span className={theme.text}>{current.pinyin}</span>
+                  <button
+                    onClick={() => openPinyinEditor(current.pinyin)}
+                    className="text-xs px-2 py-0.5 rounded bg-gray-700/60 text-gray-200 hover:bg-gray-600"
+                    title="修改拼音（多音字校正）"
+                  >
+                    ✏️
+                  </button>
+                  {current.pinyinSource === 'manual' && (
+                    <span className="text-[10px] sm:text-xs px-1.5 py-0.5 rounded bg-yellow-700/60 text-yellow-200">
+                      手动
+                    </span>
+                  )}
                 </div>
+                {isEditingPinyin && (
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                    <input
+                      type="text"
+                      value={pinyinDraft}
+                      onChange={(e) => setPinyinDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') applyPinyinEdit(currentIndex, pinyinDraft)
+                      }}
+                      className={`px-2 py-1 rounded border ${theme.input} ${theme.text} w-32`}
+                      placeholder="输入拼音"
+                    />
+                    <button
+                      onClick={() => applyPinyinEdit(currentIndex, pinyinDraft)}
+                      className="px-2 py-1 rounded bg-blue-600 text-white"
+                    >
+                      应用
+                    </button>
+                    {current.autoPinyin && current.pinyinSource === 'manual' && (
+                      <button
+                        onClick={() => resetPinyinEdit(currentIndex)}
+                        className="px-2 py-1 rounded bg-gray-600 text-white"
+                      >
+                        重置
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { setIsEditingPinyin(false); setPinyinEditError('') }}
+                      className="px-2 py-1 rounded bg-gray-600 text-white"
+                    >
+                      取消
+                    </button>
+                    {pinyinEditError && (
+                      <span className="text-red-400">{pinyinEditError}</span>
+                    )}
+                  </div>
+                )}
                 {learningMode !== 'blind' && (
                   <div className={`text-sm sm:text-base ${theme.textMuted}`}>
                     双拼: <span className="text-blue-500 font-mono text-lg sm:text-xl">
@@ -453,6 +677,7 @@ export default function Trainer() {
                   <div className="text-xs sm:text-sm text-red-400 mt-1">
                     你按了 <span className="font-mono bg-red-900/50 px-1 rounded">{wrongKey}</span>，
                     正确是 <span className="font-mono bg-green-900/50 px-1 rounded">{correctKey}</span>
+                    <span className="ml-2 text-[10px] sm:text-xs text-yellow-300">目标 {current.shuangpin}</span>
                   </div>
                 )}
               </div>

@@ -13,11 +13,21 @@ export type LearningMode = 'normal' | 'hint' | 'blind' | 'timed'
 export type TextSource = 'local' | 'online'
 
 const DEFAULT_SOUND_VOLUME = 1
+const LEARNING_MODES: LearningMode[] = ['normal', 'hint', 'blind', 'timed']
+const TEXT_SOURCES: TextSource[] = ['local', 'online']
 
 function parseStoredNumber(value: string | null) {
   if (value === null) return null
   const parsed = Number.parseFloat(value)
   return Number.isNaN(parsed) ? null : parsed
+}
+
+function isLearningMode(value: string): value is LearningMode {
+  return LEARNING_MODES.includes(value as LearningMode)
+}
+
+function isTextSource(value: string): value is TextSource {
+  return TEXT_SOURCES.includes(value as TextSource)
 }
 
 export function useTrainerSettings() {
@@ -46,8 +56,8 @@ export function useTrainerSettings() {
 
     if (savedDarkMode !== null) setDarkMode(savedDarkMode === 'true')
     if (savedSound !== null) setSoundEnabled(savedSound === 'true')
-    if (savedMode) setLearningMode(savedMode as LearningMode)
-    if (savedSource) setTextSource(savedSource as TextSource)
+    if (savedMode && isLearningMode(savedMode)) setLearningMode(savedMode)
+    if (savedSource && isTextSource(savedSource)) setTextSource(savedSource)
     if (savedAllowShortFull !== null) setAllowShortFullPinyin(savedAllowShortFull === 'true')
 
     if (savedSoundPack) {

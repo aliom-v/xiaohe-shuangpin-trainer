@@ -97,6 +97,23 @@ export default function Trainer() {
   } = useTrainerSettings()
   const startTimeRef = useRef<number>(0)
 
+  const safeDecode = useCallback((value: string) => {
+    try {
+      return decodeURIComponent(value)
+    } catch {
+      return value
+    }
+  }, [])
+
+  const decodeSharedText = useCallback((value: string) => {
+    const once = safeDecode(value)
+    if (/%[0-9A-Fa-f]{2}/.test(once)) {
+      const twice = safeDecode(once)
+      return twice
+    }
+    return once
+  }, [safeDecode])
+
   // 从 URL 参数恢复设置
   useEffect(() => {
     const params = new URLSearchParams(window.location.search)
@@ -106,8 +123,9 @@ export default function Trainer() {
     
     // URL 参数优先
     if (urlText) {
-      setInputText(decodeURIComponent(urlText))
-      setTimeout(() => startPractice(decodeURIComponent(urlText)), 100)
+      const decodedText = decodeSharedText(urlText)
+      setInputText(decodedText)
+      setTimeout(() => startPractice(decodedText), 100)
     }
     if (urlMode === 'blind') setLearningMode('blind')
     if (urlTimed) {
@@ -121,7 +139,7 @@ export default function Trainer() {
       setShowTutorial(true)
       localStorage.setItem('shuangpin_visited', 'true')
     }
-  }, [])
+  }, [decodeSharedText])
 
   useEffect(() => {
     if (!soundEnabled) return
@@ -139,7 +157,7 @@ export default function Trainer() {
   // 生成分享链接
   const getShareUrl = () => {
     const params = new URLSearchParams()
-    if (inputText) params.set('text', encodeURIComponent(inputText))
+    if (inputText) params.set('text', inputText)
     if (learningMode === 'blind') params.set('mode', 'blind')
     if (isTimedMode) params.set('timed', String(timedDuration))
     return `${window.location.origin}${window.location.pathname}?${params.toString()}`

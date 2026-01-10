@@ -111,6 +111,24 @@ export const practiceTexts = {
   ],
 }
 
+const isRecord = (value: unknown): value is Record<string, unknown> => {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+const isFiniteNumber = (value: unknown): value is number => {
+  return typeof value === 'number' && Number.isFinite(value)
+}
+
+function safeParse<T>(data: string | null, fallback: T, validate: (value: unknown) => value is T): T {
+  if (!data) return fallback
+  try {
+    const parsed = JSON.parse(data)
+    return validate(parsed) ? parsed : fallback
+  } catch {
+    return fallback
+  }
+}
+
 // 错误记录类型
 export interface ErrorRecord {
   char: string
@@ -121,11 +139,30 @@ export interface ErrorRecord {
   lastError: number // timestamp
 }
 
+const isErrorRecord = (value: unknown): value is ErrorRecord => {
+  if (!isRecord(value)) return false
+  return typeof value.char === 'string'
+    && typeof value.pinyin === 'string'
+    && typeof value.shuangpin === 'string'
+    && isFiniteNumber(value.errorCount)
+    && isFiniteNumber(value.totalCount)
+    && isFiniteNumber(value.lastError)
+}
+
+const isErrorRecordMap = (value: unknown): value is Record<string, ErrorRecord> => {
+  if (!isRecord(value)) return false
+  return Object.values(value).every(isErrorRecord)
+}
+
+const isRecordStringNumberMap = (value: unknown): value is Record<string, number> => {
+  if (!isRecord(value)) return false
+  return Object.values(value).every(isFiniteNumber)
+}
+
 // 从 localStorage 获取错误记录
 export function getErrorRecords(): Record<string, ErrorRecord> {
   if (typeof window === 'undefined') return {}
-  const data = localStorage.getItem('shuangpin_errors')
-  return data ? JSON.parse(data) : {}
+  return safeParse(localStorage.getItem('shuangpin_errors'), {}, isErrorRecordMap)
 }
 
 // 保存错误记录
@@ -174,12 +211,24 @@ export interface PracticeStats {
   lastPractice: number
 }
 
+const isPracticeStats = (value: unknown): value is PracticeStats => {
+  if (!isRecord(value)) return false
+  return isFiniteNumber(value.totalChars)
+    && isFiniteNumber(value.totalErrors)
+    && isFiniteNumber(value.totalTime)
+    && isFiniteNumber(value.sessions)
+    && isFiniteNumber(value.lastPractice)
+}
+
 export function getPracticeStats(): PracticeStats {
   if (typeof window === 'undefined') {
     return { totalChars: 0, totalErrors: 0, totalTime: 0, sessions: 0, lastPractice: 0 }
   }
-  const data = localStorage.getItem('shuangpin_stats')
-  return data ? JSON.parse(data) : { totalChars: 0, totalErrors: 0, totalTime: 0, sessions: 0, lastPractice: 0 }
+  return safeParse(
+    localStorage.getItem('shuangpin_stats'),
+    { totalChars: 0, totalErrors: 0, totalTime: 0, sessions: 0, lastPractice: 0 },
+    isPracticeStats
+  )
 }
 
 export function updatePracticeStats(chars: number, errors: number, time: number) {
@@ -206,10 +255,23 @@ export interface DailyRecord {
   avgSpeed: number // 字/分钟
 }
 
+const isDailyRecord = (value: unknown): value is DailyRecord => {
+  if (!isRecord(value)) return false
+  return typeof value.date === 'string'
+    && isFiniteNumber(value.chars)
+    && isFiniteNumber(value.errors)
+    && isFiniteNumber(value.time)
+    && isFiniteNumber(value.sessions)
+    && isFiniteNumber(value.avgSpeed)
+}
+
+const isDailyRecordList = (value: unknown): value is DailyRecord[] => {
+  return Array.isArray(value) && value.every(isDailyRecord)
+}
+
 export function getDailyRecords(): DailyRecord[] {
   if (typeof window === 'undefined') return []
-  const data = localStorage.getItem('shuangpin_daily')
-  return data ? JSON.parse(data) : []
+  return safeParse(localStorage.getItem('shuangpin_daily'), [], isDailyRecordList)
 }
 
 export function saveDailyRecord(chars: number, errors: number, time: number) {
@@ -291,8 +353,7 @@ export function getUnlockedAchievements(): Achievement[] {
   if (typeof window === 'undefined') return []
   const stats = getPracticeStats()
   const daily = getDailyRecords()
-  const unlocked = localStorage.getItem('shuangpin_achievements')
-  const unlockedIds: Record<string, number> = unlocked ? JSON.parse(unlocked) : {}
+  const unlockedIds = safeParse(localStorage.getItem('shuangpin_achievements'), {}, isRecordStringNumberMap)
   
   return achievements.map(a => ({
     ...a,
@@ -305,8 +366,7 @@ export function checkAndUnlockAchievements(accuracy?: number, speed?: number): A
   if (typeof window === 'undefined') return []
   const stats = getPracticeStats()
   const daily = getDailyRecords()
-  const unlocked = localStorage.getItem('shuangpin_achievements')
-  const unlockedIds: Record<string, number> = unlocked ? JSON.parse(unlocked) : {}
+  const unlockedIds = safeParse(localStorage.getItem('shuangpin_achievements'), {}, isRecordStringNumberMap)
   
   const newlyUnlocked: Achievement[] = []
   

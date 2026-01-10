@@ -7,7 +7,7 @@ export function useTheme(darkMode: boolean) {
     bg: 'bg-gray-900',
     card: 'bg-gray-800',
     text: 'text-white',
-    textMuted: 'text-gray-400',
+    textMuted: 'text-gray-300',
     border: 'border-gray-700',
     // 输入框
     input: 'bg-gray-700 border-gray-600',
@@ -17,11 +17,11 @@ export function useTheme(darkMode: boolean) {
     // 进度条背景
     bar: 'bg-gray-700',
     // 键盘专用
-    key: 'bg-gray-700 border-gray-900 text-gray-300',
+    key: 'bg-gray-700 border-gray-900 text-gray-200',
     keyHover: 'hover:bg-gray-600 active:bg-gray-500',
     initial: 'text-blue-400',
     final: 'text-green-400',
-    legend: 'text-gray-400',
+    legend: 'text-gray-300',
     tooltip: 'bg-gray-900 text-white',
   } : {
     // 基础

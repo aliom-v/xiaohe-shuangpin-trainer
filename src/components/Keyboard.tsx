@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { useTheme } from '@/hooks/useTheme'
 
 // 键位标注 + 示例词
@@ -49,7 +49,7 @@ interface KeyboardProps {
   correctKey?: string | null   // 正确的键
 }
 
-export default function Keyboard({
+function Keyboard({
   activeKey, targetKeys, currentStep, darkMode = true, onKeyClick, showWrongKey, correctKey
 }: KeyboardProps) {
   const [pressedKey, setPressedKey] = useState<string | null>(null)
@@ -165,3 +165,5 @@ export default function Keyboard({
     </div>
   )
 }
+
+export default memo(Keyboard)

@@ -543,9 +543,14 @@ export const textCategories = {
   },
 }
 
+let allTextsCache: string[] | null = null
+
 // 获取所有文本的扁平数组
 export function getAllTexts(): string[] {
-  return Object.values(textCategories).flatMap((cat) => cat.texts)
+  if (!allTextsCache) {
+    allTextsCache = Object.values(textCategories).flatMap((cat) => cat.texts)
+  }
+  return allTextsCache
 }
 
 // 获取随机文本

@@ -1,13 +1,15 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import dynamic from 'next/dynamic'
-import { CharInfo, parsePinyinParts, pinyinToShuangpin } from '@/lib/xiaohe'
+import { parsePinyinParts, pinyinToShuangpin } from '@/lib/xiaohe'
 import { convertTextToQueue, getRandomText } from '@/lib/converter'
 import { playKeySound, playSuccessSound, playErrorSound, getSoundPacks, activateAudio } from '@/lib/sound'
-import { saveErrorRecord, updatePracticeStats, saveDailyRecord, checkAndUnlockAchievements, Achievement } from '@/lib/learning'
+import { saveErrorRecord, updatePracticeStats, saveDailyRecord, checkAndUnlockAchievements } from '@/lib/learning'
 import { useTheme } from '@/hooks/useTheme'
 import { useTrainerSettings } from '@/hooks/useTrainerSettings'
+import { useTrainerState } from '@/hooks/useTrainerState'
+import { useTrainerDerived } from '@/hooks/useTrainerDerived'
 import Keyboard from './Keyboard'
 const Tutorial = dynamic(() => import('./Tutorial'), { ssr: false })
 const PracticeMode = dynamic(() => import('./PracticeMode'), { ssr: false })
@@ -16,13 +18,63 @@ const ShuangpinLookup = dynamic(() => import('./ShuangpinLookup'), { ssr: false 
 const CustomTextModal = dynamic(() => import('./CustomTextModal'), { ssr: false })
 
 export default function Trainer() {
-  const [inputText, setInputText] = useState('')
-  const [queue, setQueue] = useState<CharInfo[]>([])
-  const [currentIndex, setCurrentIndex] = useState(0)
-  const [inputBuffer, setInputBuffer] = useState('')
-  const [isError, setIsError] = useState(false)
-  const [isStarted, setIsStarted] = useState(false)
-  const [stats, setStats] = useState({ correct: 0, errors: 0 })
+  const {
+    state,
+    setInputText,
+    setQueue,
+    setCurrentIndex,
+    setInputBuffer,
+    setIsError,
+    setIsStarted,
+    setStats,
+    setLastPressedKey,
+    incrementKeyPressId,
+    setAutoNext,
+    setIsLoading,
+    setShowTutorial,
+    setShowPracticeMode,
+    setShowStats,
+    setShowLookup,
+    setShowCustomText,
+    setFollowMode,
+    setTimeLeft,
+    setIsTimedMode,
+    setTimedDuration,
+    setWrongKey,
+    setCorrectKey,
+    setIsEditingPinyin,
+    setPinyinDraft,
+    setPinyinEditError,
+    setNewAchievements,
+  } = useTrainerState()
+  const {
+    inputText,
+    queue,
+    currentIndex,
+    inputBuffer,
+    isError,
+    isStarted,
+    stats,
+    lastPressedKey,
+    keyPressId,
+    autoNext,
+    isLoading,
+    showTutorial,
+    showPracticeMode,
+    showStats,
+    showLookup,
+    showCustomText,
+    followMode,
+    timeLeft,
+    isTimedMode,
+    timedDuration,
+    wrongKey,
+    correctKey,
+    isEditingPinyin,
+    pinyinDraft,
+    pinyinEditError,
+    newAchievements,
+  } = state
   const {
     darkMode,
     setDarkMode,
@@ -43,27 +95,7 @@ export default function Trainer() {
     allowShortFullPinyin,
     setAllowShortFullPinyin,
   } = useTrainerSettings()
-  const [lastPressedKey, setLastPressedKey] = useState<string | null>(null)
-  const [keyPressId, setKeyPressId] = useState(0)
-  const [autoNext, setAutoNext] = useState(true)
-  const [isLoading, setIsLoading] = useState(false)
-  
-  // 学习功能状态
-  const [showTutorial, setShowTutorial] = useState(false)
-  const [showPracticeMode, setShowPracticeMode] = useState(false)
-  const [showStats, setShowStats] = useState(false)
-  const [showLookup, setShowLookup] = useState(false)
-  const [showCustomText, setShowCustomText] = useState(false)
-  const [followMode, setFollowMode] = useState(false)
-  const [timeLeft, setTimeLeft] = useState(60)
-  const [isTimedMode, setIsTimedMode] = useState(false)
-  const [timedDuration, setTimedDuration] = useState(60)
   const startTimeRef = useRef<number>(0)
-  const [wrongKey, setWrongKey] = useState<string | null>(null)
-  const [correctKey, setCorrectKey] = useState<string | null>(null)
-  const [isEditingPinyin, setIsEditingPinyin] = useState(false)
-  const [pinyinDraft, setPinyinDraft] = useState('')
-  const [pinyinEditError, setPinyinEditError] = useState('')
 
   // 从 URL 参数恢复设置
   useEffect(() => {
@@ -254,7 +286,7 @@ export default function Trainer() {
     const matches = allowedSequences.filter(seq => seq.startsWith(nextBuffer))
 
     setLastPressedKey(key)
-    setKeyPressId(id => id + 1)
+    incrementKeyPressId()
 
     if (matches.length === 0) {
       const expectedIndex = Math.min(inputBuffer.length, target.length - 1)
@@ -352,15 +384,7 @@ export default function Trainer() {
     return () => window.removeEventListener('keydown', handleKeyDown)
   }, [handleKeyDown])
 
-  const current = queue[currentIndex]
-  const isComplete = isStarted && (currentIndex >= queue.length || (isTimedMode && timeLeft <= 0))
-  const showHintKeys = !!current
-    && !isComplete
-    && learningMode === 'hint'
-    && (!inputBuffer || current.shuangpin.startsWith(inputBuffer))
-  const targetKeys = showHintKeys ? [current.shuangpin[0], current.shuangpin[1]] as [string, string] : null
-
-  const [newAchievements, setNewAchievements] = useState<Achievement[]>([])
+  const { current, isComplete, showHintKeys, targetKeys } = useTrainerDerived(state, learningMode)
 
   // 完成时保存统计和检查成就
   useEffect(() => {
@@ -495,6 +519,7 @@ export default function Trainer() {
               onChange={(e) => setSoundPackId(e.target.value)}
               className={`px-2 py-1 rounded-lg text-xs sm:text-sm border ${theme.input} ${theme.text}`}
               title="选择键盘音效包"
+              aria-label="选择键盘音效包"
             >
               {getSoundPacks().map(pack => (
                 <option key={pack.id} value={pack.id}>{pack.name}</option>
@@ -518,6 +543,7 @@ export default function Trainer() {
                 onChange={(e) => setKeyVolume(Number(e.target.value))}
                 className="w-16 sm:w-20 accent-blue-500"
                 title="调整键音音量"
+                aria-label="键音音量"
               />
               <span className={`text-[10px] sm:text-xs ${theme.textMuted} w-9 text-right`}>
                 {Math.round(keyVolume * 100)}%
@@ -534,6 +560,7 @@ export default function Trainer() {
                 onChange={(e) => setSuccessVolume(Number(e.target.value))}
                 className="w-16 sm:w-20 accent-green-500"
                 title="调整成功音量"
+                aria-label="成功音量"
               />
               <span className={`text-[10px] sm:text-xs ${theme.textMuted} w-9 text-right`}>
                 {Math.round(successVolume * 100)}%
@@ -550,6 +577,7 @@ export default function Trainer() {
                 onChange={(e) => setErrorVolume(Number(e.target.value))}
                 className="w-16 sm:w-20 accent-red-500"
                 title="调整错误音量"
+                aria-label="错误音量"
               />
               <span className={`text-[10px] sm:text-xs ${theme.textMuted} w-9 text-right`}>
                 {Math.round(errorVolume * 100)}%
@@ -798,6 +826,7 @@ export default function Trainer() {
             placeholder="在此粘贴要练习的文本，或点击随机文本..."
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
+            aria-label="练习文本输入"
           />
           <div className="flex flex-wrap gap-3 mt-3">
             <button onClick={() => startPractice(inputText)} className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition">

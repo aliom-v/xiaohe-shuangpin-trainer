@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next'
 import './globals.css'
+import WebVitals from '@/components/WebVitals'
 
 export const metadata: Metadata = {
   title: '小鹤双拼练习器 - 在线学习双拼输入法',
@@ -34,7 +35,6 @@ export const viewport: Viewport = {
   themeColor: '#3b82f6',
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
 }
 
 export default function RootLayout({
@@ -49,6 +49,7 @@ export default function RootLayout({
       </head>
       <body>
         {children}
+        <WebVitals />
         <script
           dangerouslySetInnerHTML={{
             __html: `

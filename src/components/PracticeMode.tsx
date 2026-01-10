@@ -1,6 +1,7 @@
 'use client'
 
 import { practiceTexts } from '@/lib/learning'
+import { useTheme } from '@/hooks/useTheme'
 
 interface PracticeModeProps {
   onSelect: (text: string) => void
@@ -39,21 +40,7 @@ const difficulties = [
 ]
 
 export default function PracticeMode({ onSelect, onClose, darkMode }: PracticeModeProps) {
-  const theme = darkMode ? {
-    bg: 'bg-gray-900',
-    card: 'bg-gray-800',
-    cardHover: 'hover:bg-gray-700',
-    text: 'text-white',
-    textMuted: 'text-gray-400',
-    border: 'border-gray-700',
-  } : {
-    bg: 'bg-gray-100',
-    card: 'bg-white',
-    cardHover: 'hover:bg-gray-50',
-    text: 'text-gray-900',
-    textMuted: 'text-gray-500',
-    border: 'border-gray-300',
-  }
+  const theme = useTheme(darkMode)
 
   const handleSelect = (texts: string[]) => {
     const text = texts[Math.floor(Math.random() * texts.length)]

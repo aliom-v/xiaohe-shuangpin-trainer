@@ -10,43 +10,28 @@ import { pinyinToShuangpin, CharInfo } from './xiaohe'
  */
 export function convertTextToQueue(text: string): CharInfo[] {
   const queue: CharInfo[] = []
-  
-  // 获取每个字的拼音信息（包含声母和韵母）
+
+  // 一次性获取所有拼音信息（包含声母和韵母）
   const result = pinyin(text, {
-    type: 'array',
+    type: 'all',
     toneType: 'none',
     v: true,
   })
-  
-  const initials = pinyin(text, {
-    pattern: 'initial',
-    type: 'array',
-    toneType: 'none',
-  })
-  
-  const finals = pinyin(text, {
-    pattern: 'final',
-    type: 'array',
-    toneType: 'none',
-    v: true,
-  })
-  
-  const chars = text.split('')
-  
-  for (let i = 0; i < chars.length; i++) {
-    const char = chars[i]
-    
+
+  for (const item of result) {
+    const char = item.origin
+
     // 跳过非汉字字符（标点、空格等）
     if (!/[\u4e00-\u9fa5]/.test(char)) {
       continue
     }
-    
-    const py = result[i] || ''
-    const initial = initials[i] || ''
-    const final = finals[i] || ''
-    
+
+    const py = item.pinyin || ''
+    const initial = item.initial || ''
+    const final = item.final || ''
+
     const shuangpin = pinyinToShuangpin(py, initial, final)
-    
+
     queue.push({
       char,
       pinyin: py,
@@ -55,7 +40,7 @@ export function convertTextToQueue(text: string): CharInfo[] {
       shuangpin,
     })
   }
-  
+
   return queue
 }
 

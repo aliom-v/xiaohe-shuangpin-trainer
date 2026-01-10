@@ -8,11 +8,13 @@ import {
   getDailyRecords,
   getUnlockedAchievements,
   getSmartRecommendation,
+  getStreak,
   ErrorRecord,
   PracticeStats,
   DailyRecord,
   Achievement,
 } from '@/lib/learning'
+import { useTheme } from '@/hooks/useTheme'
 import { finalMap } from '@/lib/xiaohe'
 
 interface StatsProps {
@@ -39,23 +41,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
     setRecommendation(getSmartRecommendation())
   }, [])
 
-  const theme = darkMode
-    ? {
-        bg: 'bg-gray-900',
-        card: 'bg-gray-800',
-        text: 'text-white',
-        textMuted: 'text-gray-400',
-        border: 'border-gray-700',
-        bar: 'bg-gray-700',
-      }
-    : {
-        bg: 'bg-gray-100',
-        card: 'bg-white',
-        text: 'text-gray-900',
-        textMuted: 'text-gray-500',
-        border: 'border-gray-300',
-        bar: 'bg-gray-200',
-      }
+  const theme = useTheme(darkMode)
 
   const getFinalName = (key: string) => {
     const entry = Object.entries(finalMap).find(([_, v]) => v === key)
@@ -74,7 +60,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
 
   // 计算最高速度
   const maxSpeed = daily.length > 0 ? Math.max(...daily.map((d) => d.avgSpeed)) : 0
-  const streak = daily.length > 0 ? calculateStreak(daily) : 0
+  const streak = daily.length > 0 ? getStreak(daily) : 0
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -280,24 +266,4 @@ function StatCard({ label, value, color, darkMode }: { label: string; value: str
       <div className={`text-xs sm:text-sm ${darkMode ? 'text-gray-400' : 'text-gray-500'}`}>{label}</div>
     </div>
   )
-}
-
-function calculateStreak(daily: DailyRecord[]): number {
-  if (daily.length === 0) return 0
-  const sorted = [...daily].sort((a, b) => b.date.localeCompare(a.date))
-  const today = new Date().toISOString().split('T')[0]
-  
-  let streak = 0
-  let checkDate = new Date(today)
-  
-  for (const record of sorted) {
-    const expectedDate = checkDate.toISOString().split('T')[0]
-    if (record.date === expectedDate) {
-      streak++
-      checkDate.setDate(checkDate.getDate() - 1)
-    } else if (record.date < expectedDate) {
-      break
-    }
-  }
-  return streak
 }

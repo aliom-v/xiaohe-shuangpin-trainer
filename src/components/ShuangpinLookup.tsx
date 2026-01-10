@@ -1,7 +1,8 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
-import { initialMap, finalMap, specialSyllables, pinyinToShuangpin } from '@/lib/xiaohe'
+import { useState, useMemo } from 'react'
+import { initialMap, finalMap, specialSyllables, pinyinToShuangpin, parsePinyinParts } from '@/lib/xiaohe'
+import { useTheme } from '@/hooks/useTheme'
 
 interface ShuangpinLookupProps {
   onClose: () => void
@@ -38,41 +39,10 @@ const allPinyins = [
   'wa', 'wo', 'wu', 'wai', 'wei', 'wan', 'wen', 'wang', 'weng', 'wong',
 ]
 
-// 解析拼音获取声母和韵母
-function parsePinyin(pinyin: string): { initial: string; final: string } {
-  const py = pinyin.toLowerCase()
-  
-  // 特殊整体音节
-  if (specialSyllables[py]) {
-    return { initial: '', final: py }
-  }
-  
-  // 检查双字母声母
-  const doubleInitials = ['zh', 'ch', 'sh']
-  for (const di of doubleInitials) {
-    if (py.startsWith(di)) {
-      return { initial: di, final: py.slice(2) }
-    }
-  }
-  
-  // 单字母声母
-  const singleInitials = ['b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h', 'j', 'q', 'x', 'r', 'z', 'c', 's', 'y', 'w']
-  for (const si of singleInitials) {
-    if (py.startsWith(si)) {
-      return { initial: si, final: py.slice(1) }
-    }
-  }
-  
-  // 零声母
-  return { initial: '', final: py }
-}
-
 export default function ShuangpinLookup({ onClose, darkMode }: ShuangpinLookupProps) {
   const [query, setQuery] = useState('')
-  
-  const theme = darkMode
-    ? { bg: 'bg-gray-900', card: 'bg-gray-800', text: 'text-white', textMuted: 'text-gray-400', border: 'border-gray-700', input: 'bg-gray-700 border-gray-600' }
-    : { bg: 'bg-gray-100', card: 'bg-white', text: 'text-gray-900', textMuted: 'text-gray-500', border: 'border-gray-300', input: 'bg-white border-gray-300' }
+
+  const theme = useTheme(darkMode)
 
   // 搜索结果
   const results = useMemo(() => {
@@ -82,7 +52,7 @@ export default function ShuangpinLookup({ onClose, darkMode }: ShuangpinLookupPr
       .filter(py => py.includes(q))
       .slice(0, 50)
       .map(py => {
-        const { initial, final } = parsePinyin(py)
+        const { initial, final } = parsePinyinParts(py)
         const shuangpin = pinyinToShuangpin(py, initial, final)
         return { pinyin: py, initial, final, shuangpin }
       })

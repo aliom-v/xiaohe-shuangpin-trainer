@@ -6,6 +6,7 @@ import { CharInfo, parsePinyinParts, pinyinToShuangpin } from '@/lib/xiaohe'
 import { convertTextToQueue, getRandomText } from '@/lib/converter'
 import { playKeySound, playSuccessSound, playErrorSound, getSoundPacks, activateAudio } from '@/lib/sound'
 import { saveErrorRecord, updatePracticeStats, saveDailyRecord, checkAndUnlockAchievements, Achievement } from '@/lib/learning'
+import { useTheme } from '@/hooks/useTheme'
 import { useTrainerSettings } from '@/hooks/useTrainerSettings'
 import Keyboard from './Keyboard'
 const Tutorial = dynamic(() => import('./Tutorial'), { ssr: false })
@@ -394,21 +395,7 @@ export default function Trainer() {
     setPinyinEditError('')
   }, [currentIndex])
 
-  const theme = darkMode ? {
-    bg: 'bg-gray-900',
-    text: 'text-white',
-    textMuted: 'text-gray-400',
-    card: 'bg-gray-800',
-    input: 'bg-gray-800 border-gray-700',
-    btn: 'bg-gray-700 hover:bg-gray-600',
-  } : {
-    bg: 'bg-gray-100',
-    text: 'text-gray-900',
-    textMuted: 'text-gray-500',
-    card: 'bg-white shadow-lg',
-    input: 'bg-white border-gray-300',
-    btn: 'bg-gray-200 hover:bg-gray-300 text-gray-800',
-  }
+  const theme = useTheme(darkMode)
 
   // 计算速度
   const getSpeed = () => {
@@ -427,22 +414,22 @@ export default function Trainer() {
             <p className={`text-xs sm:text-base ${theme.textMuted}`}>Xiaohe Shuangpin Trainer</p>
           </div>
           <div className="flex gap-1 sm:gap-2">
-            <button onClick={() => setShowTutorial(true)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${theme.btn}`} title="教程">
+            <button onClick={() => setShowTutorial(true)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${theme.btn}`} title="教程" aria-label="打开教程">
               📖
             </button>
-            <button onClick={() => setShowStats(true)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${theme.btn}`} title="统计">
+            <button onClick={() => setShowStats(true)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${theme.btn}`} title="统计" aria-label="查看统计">
               📊
             </button>
-            <button onClick={() => setShowLookup(true)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${theme.btn}`} title="双拼查询">
+            <button onClick={() => setShowLookup(true)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${theme.btn}`} title="双拼查询" aria-label="双拼查询">
               🔍
             </button>
-            <button onClick={() => setAutoNext(!autoNext)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${autoNext ? 'bg-purple-600 text-white' : theme.btn}`} title="自动下一个">
+            <button onClick={() => setAutoNext(!autoNext)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${autoNext ? 'bg-purple-600 text-white' : theme.btn}`} title="自动下一个" aria-label={autoNext ? '关闭自动下一个' : '开启自动下一个'}>
               {autoNext ? '🔄' : '⏸️'}
             </button>
-            <button onClick={() => setSoundEnabled(!soundEnabled)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${theme.btn}`}>
+            <button onClick={() => setSoundEnabled(!soundEnabled)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${theme.btn}`} aria-label={soundEnabled ? '关闭声音' : '开启声音'}>
               {soundEnabled ? '🔊' : '🔇'}
             </button>
-            <button onClick={() => setDarkMode(!darkMode)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${theme.btn}`}>
+            <button onClick={() => setDarkMode(!darkMode)} className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${theme.btn}`} aria-label={darkMode ? '切换到亮色模式' : '切换到暗色模式'}>
               {darkMode ? '☀️' : '🌙'}
             </button>
           </div>

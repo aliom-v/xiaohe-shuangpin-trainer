@@ -1,78 +1,95 @@
 import { NextResponse } from 'next/server'
 
+// API 响应类型
+interface HitokotoResponse {
+  hitokoto: string
+}
+
+interface JinrishiciResponse {
+  content: string
+}
+
+type ApiResponse = HitokotoResponse | JinrishiciResponse
+
+interface ApiConfig {
+  name: string
+  url: string
+  parse: (data: ApiResponse) => string
+}
+
 // 多个免费 API 源
-const APIs = [
+const APIs: ApiConfig[] = [
   // 一言 - 动漫
   {
     name: '一言·动漫',
     url: 'https://v1.hitokoto.cn/?c=a&encode=json',
-    parse: (data: any) => data.hitokoto,
+    parse: (data) => (data as HitokotoResponse).hitokoto,
   },
   // 一言 - 漫画
   {
     name: '一言·漫画',
     url: 'https://v1.hitokoto.cn/?c=b&encode=json',
-    parse: (data: any) => data.hitokoto,
+    parse: (data) => (data as HitokotoResponse).hitokoto,
   },
   // 一言 - 游戏
   {
     name: '一言·游戏',
     url: 'https://v1.hitokoto.cn/?c=c&encode=json',
-    parse: (data: any) => data.hitokoto,
+    parse: (data) => (data as HitokotoResponse).hitokoto,
   },
   // 一言 - 文学
   {
     name: '一言·文学',
     url: 'https://v1.hitokoto.cn/?c=d&encode=json',
-    parse: (data: any) => data.hitokoto,
+    parse: (data) => (data as HitokotoResponse).hitokoto,
   },
   // 一言 - 原创
   {
     name: '一言·原创',
     url: 'https://v1.hitokoto.cn/?c=e&encode=json',
-    parse: (data: any) => data.hitokoto,
+    parse: (data) => (data as HitokotoResponse).hitokoto,
   },
   // 一言 - 网络
   {
     name: '一言·网络',
     url: 'https://v1.hitokoto.cn/?c=f&encode=json',
-    parse: (data: any) => data.hitokoto,
+    parse: (data) => (data as HitokotoResponse).hitokoto,
   },
   // 一言 - 影视
   {
     name: '一言·影视',
     url: 'https://v1.hitokoto.cn/?c=h&encode=json',
-    parse: (data: any) => data.hitokoto,
+    parse: (data) => (data as HitokotoResponse).hitokoto,
   },
   // 一言 - 诗词
   {
     name: '一言·诗词',
     url: 'https://v1.hitokoto.cn/?c=i&encode=json',
-    parse: (data: any) => data.hitokoto,
+    parse: (data) => (data as HitokotoResponse).hitokoto,
   },
   // 一言 - 哲学
   {
     name: '一言·哲学',
     url: 'https://v1.hitokoto.cn/?c=k&encode=json',
-    parse: (data: any) => data.hitokoto,
+    parse: (data) => (data as HitokotoResponse).hitokoto,
   },
   // 今日诗词
   {
     name: '今日诗词',
     url: 'https://v1.jinrishici.com/all.json',
-    parse: (data: any) => data.content,
+    parse: (data) => (data as JinrishiciResponse).content,
   },
   // 随机古诗
   {
     name: '古诗文',
     url: 'https://v1.jinrishici.com/rensheng.json',
-    parse: (data: any) => data.content,
+    parse: (data) => (data as JinrishiciResponse).content,
   },
   // 情诗
   {
     name: '情诗',
     url: 'https://v1.jinrishici.com/qingshi.json',
-    parse: (data: any) => data.content,
+    parse: (data) => (data as JinrishiciResponse).content,
   },
 ]
 

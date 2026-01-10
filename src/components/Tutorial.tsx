@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { initialMap, finalMap } from '@/lib/xiaohe'
+import { useTheme } from '@/hooks/useTheme'
 
 interface TutorialProps {
   onClose: () => void
@@ -45,19 +46,7 @@ export default function Tutorial({ onClose, darkMode }: TutorialProps) {
   const [step, setStep] = useState(0)
   const [showTable, setShowTable] = useState(false)
 
-  const theme = darkMode ? {
-    bg: 'bg-gray-900',
-    card: 'bg-gray-800',
-    text: 'text-white',
-    textMuted: 'text-gray-400',
-    border: 'border-gray-700',
-  } : {
-    bg: 'bg-gray-100',
-    card: 'bg-white',
-    text: 'text-gray-900',
-    textMuted: 'text-gray-500',
-    border: 'border-gray-300',
-  }
+  const theme = useTheme(darkMode)
 
   const currentStep = steps[step]
 

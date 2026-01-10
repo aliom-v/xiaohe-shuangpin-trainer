@@ -265,7 +265,7 @@ export const achievements: Achievement[] = [
   { id: 'streak_30', name: '月度达人', desc: '连续练习30天', icon: '🏅', condition: (_, d) => getStreak(d) >= 30 },
 ]
 
-function getStreak(daily: DailyRecord[]): number {
+export function getStreak(daily: DailyRecord[]): number {
   if (daily.length === 0) return 0
   const sorted = [...daily].sort((a, b) => b.date.localeCompare(a.date))
   const today = new Date().toISOString().split('T')[0]

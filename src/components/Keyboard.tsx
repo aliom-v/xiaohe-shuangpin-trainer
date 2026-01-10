@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useTheme } from '@/hooks/useTheme'
 
 // 键位标注 + 示例词
 const keyLabels: Record<string, { initial?: string; final?: string; example?: string }> = {
@@ -48,8 +49,8 @@ interface KeyboardProps {
   correctKey?: string | null   // 正确的键
 }
 
-export default function Keyboard({ 
-  activeKey, targetKeys, currentStep, darkMode = true, onKeyClick, showWrongKey, correctKey 
+export default function Keyboard({
+  activeKey, targetKeys, currentStep, darkMode = true, onKeyClick, showWrongKey, correctKey
 }: KeyboardProps) {
   const [pressedKey, setPressedKey] = useState<string | null>(null)
   const [hoveredKey, setHoveredKey] = useState<string | null>(null)
@@ -62,23 +63,7 @@ export default function Keyboard({
     }
   }, [activeKey])
 
-  const theme = darkMode ? {
-    card: 'bg-gray-800',
-    key: 'bg-gray-700 border-gray-900 text-gray-300',
-    keyHover: 'hover:bg-gray-600 active:bg-gray-500',
-    initial: 'text-blue-400',
-    final: 'text-green-400',
-    legend: 'text-gray-400',
-    tooltip: 'bg-gray-900 text-white',
-  } : {
-    card: 'bg-white shadow-lg',
-    key: 'bg-gray-100 border-gray-300 text-gray-700',
-    keyHover: 'hover:bg-gray-200 active:bg-gray-300',
-    initial: 'text-blue-600',
-    final: 'text-green-600',
-    legend: 'text-gray-500',
-    tooltip: 'bg-gray-800 text-white',
-  }
+  const theme = useTheme(darkMode)
 
   const getKeyClass = (key: string) => {
     const base = 'relative w-8 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-lg md:rounded-xl font-mono flex flex-col items-center justify-center transition-all duration-75 border-b-2 md:border-b-4 select-none cursor-pointer'

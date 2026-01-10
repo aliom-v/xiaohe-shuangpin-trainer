@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTheme } from '@/hooks/useTheme'
 
 interface CustomTextModalProps {
   onStart: (text: string, mode: 'normal' | 'follow') => void
@@ -12,9 +13,7 @@ export default function CustomTextModal({ onStart, onClose, darkMode }: CustomTe
   const [text, setText] = useState('')
   const [mode, setMode] = useState<'normal' | 'follow'>('normal')
 
-  const theme = darkMode
-    ? { bg: 'bg-gray-900', card: 'bg-gray-800', text: 'text-white', textMuted: 'text-gray-400', border: 'border-gray-700', input: 'bg-gray-700 border-gray-600' }
-    : { bg: 'bg-gray-100', card: 'bg-white', text: 'text-gray-900', textMuted: 'text-gray-500', border: 'border-gray-300', input: 'bg-white border-gray-300' }
+  const theme = useTheme(darkMode)
 
   const handleStart = () => {
     const cleanText = text.trim()

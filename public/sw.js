@@ -1,5 +1,7 @@
 // Service Worker for 小鹤双拼练习器
-const CACHE_NAME = 'xiaohe-shuangpin-v1'
+const CACHE_NAME = 'xiaohe-shuangpin-v2'
+
+// 核心静态资源 - 预缓存
 const STATIC_ASSETS = [
   '/',
   '/manifest.json',
@@ -29,7 +31,7 @@ self.addEventListener('activate', (event) => {
   self.clients.claim()
 })
 
-// 网络优先，失败时使用缓存
+// 根据资源类型采用不同缓存策略
 self.addEventListener('fetch', (event) => {
   // 跳过非 GET 请求
   if (event.request.method !== 'GET') return
@@ -37,6 +39,28 @@ self.addEventListener('fetch', (event) => {
   // 跳过 API 请求
   if (event.request.url.includes('/api/')) return
 
+  const url = new URL(event.request.url)
+
+  // 音效文件：缓存优先策略（加载后长期缓存）
+  if (url.pathname.includes('/sounds/') && url.pathname.endsWith('.mp3')) {
+    event.respondWith(
+      caches.match(event.request).then((cachedResponse) => {
+        if (cachedResponse) {
+          return cachedResponse
+        }
+        return fetch(event.request).then((response) => {
+          const responseClone = response.clone()
+          caches.open(CACHE_NAME).then((cache) => {
+            cache.put(event.request, responseClone)
+          })
+          return response
+        })
+      })
+    )
+    return
+  }
+
+  // 其他资源：网络优先，失败时使用缓存
   event.respondWith(
     fetch(event.request)
       .then((response) => {

@@ -40,6 +40,34 @@ export interface CharInfo {
   initial: string
   final: string
   shuangpin: string
+  autoPinyin?: string
+  pinyinSource?: 'auto' | 'manual'
+}
+
+// 所有声母列表（按长度降序排列，优先匹配 zh/ch/sh）
+const initials = ['zh', 'ch', 'sh', 'b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h', 'j', 'q', 'x', 'r', 'z', 'c', 's', 'y', 'w']
+
+/**
+ * 将拼音解析为声母和韵母
+ */
+export function parsePinyinParts(pinyin: string): { initial: string; final: string } {
+  const py = pinyin.toLowerCase()
+
+  // 尝试匹配声母
+  for (const initial of initials) {
+    if (py.startsWith(initial)) {
+      return {
+        initial,
+        final: py.slice(initial.length)
+      }
+    }
+  }
+
+  // 零声母情况
+  return {
+    initial: '',
+    final: py
+  }
 }
 
 /**

@@ -54,7 +54,14 @@ export function useTrainerSettings() {
     const savedErrorVolume = localStorage.getItem('shuangpin_sound_volume_error')
     const savedLegacyVolume = localStorage.getItem('shuangpin_sound_volume')
 
-    if (savedDarkMode !== null) setDarkMode(savedDarkMode === 'true')
+    // 主题：优先使用用户保存的设置，否则跟随系统
+    if (savedDarkMode !== null) {
+      setDarkMode(savedDarkMode === 'true')
+    } else {
+      // 跟随系统主题
+      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
+      setDarkMode(prefersDark)
+    }
     if (savedSound !== null) setSoundEnabled(savedSound === 'true')
     if (savedMode && isLearningMode(savedMode)) setLearningMode(savedMode)
     if (savedSource && isTextSource(savedSource)) setTextSource(savedSource)

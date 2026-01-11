@@ -24,7 +24,7 @@ export const finalMap: Record<string, string> = {
   er: 'r',
   ia: 'x', ie: 'p', iu: 'q', ian: 'm', iao: 'n', in: 'b', ing: 'k', iang: 'l',
   ua: 'x', uo: 'o', uai: 'k', ui: 'v', uan: 'r', un: 'y', uang: 'l',
-  ve: 't', ue: 't', vn: 'y',
+  van: 'r', ve: 't', ue: 't', vn: 'y',
 }
 
 // 特殊整体音节（零声母处理）
@@ -37,37 +37,39 @@ export const specialSyllables: Record<string, string> = {
 export interface CharInfo {
   char: string
   pinyin: string
+  autoPinyin?: string
   initial: string
   final: string
   shuangpin: string
-  autoPinyin?: string
   pinyinSource?: 'auto' | 'manual'
 }
 
-// 所有声母列表（按长度降序排列，优先匹配 zh/ch/sh）
-const initials = ['zh', 'ch', 'sh', 'b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h', 'j', 'q', 'x', 'r', 'z', 'c', 's', 'y', 'w']
-
-/**
- * 将拼音解析为声母和韵母
- */
 export function parsePinyinParts(pinyin: string): { initial: string; final: string } {
-  const py = pinyin.toLowerCase()
-
-  // 尝试匹配声母
-  for (const initial of initials) {
-    if (py.startsWith(initial)) {
-      return {
-        initial,
-        final: py.slice(initial.length)
-      }
+  const py = pinyin.toLowerCase().replace('u:', 'v').replace('ü', 'v')
+  
+  if (specialSyllables[py]) {
+    return { initial: '', final: py }
+  }
+  
+  const doubleInitials = ['zh', 'ch', 'sh']
+  for (const di of doubleInitials) {
+    if (py.startsWith(di)) {
+      return { initial: di, final: py.slice(2) }
     }
   }
-
-  // 零声母情况
-  return {
-    initial: '',
-    final: py
+  
+  const singleInitials = ['b', 'p', 'm', 'f', 'd', 't', 'n', 'l', 'g', 'k', 'h', 'j', 'q', 'x', 'r', 'z', 'c', 's', 'y', 'w']
+  for (const si of singleInitials) {
+    if (py.startsWith(si)) {
+      let final = py.slice(1)
+      if (['j', 'q', 'x', 'y'].includes(si) && final.startsWith('u')) {
+        final = `v${final.slice(1)}`
+      }
+      return { initial: si, final }
+    }
   }
+  
+  return { initial: '', final: py }
 }
 
 /**

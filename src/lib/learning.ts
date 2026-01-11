@@ -1,5 +1,7 @@
 // 学习模块 - 专项练习、难度分级、错误分析
 
+import { parsePinyinParts } from './xiaohe'
+
 // 声母分类
 export const initialGroups = {
   normal: {
@@ -202,6 +204,20 @@ export function getWeakFinals(): Record<string, number> {
   return finals
 }
 
+// 获取薄弱声母统计
+export function getWeakInitials(): Record<string, number> {
+  const records = getErrorRecords()
+  const initials: Record<string, number> = {}
+  Object.values(records).forEach(r => {
+    if (r.errorCount > 0) {
+      const { initial } = parsePinyinParts(r.pinyin)
+      const key = initial || '∅'
+      initials[key] = (initials[key] || 0) + r.errorCount
+    }
+  })
+  return initials
+}
+
 // 练习统计
 export interface PracticeStats {
   totalChars: number
@@ -398,6 +414,7 @@ export function checkAndUnlockAchievements(accuracy?: number, speed?: number): A
 export function getSmartRecommendation(): { type: string; keys: string[]; reason: string } | null {
   const errors = getFrequentErrors(5)
   const weakFinals = getWeakFinals()
+  const weakInitials = getWeakInitials()
   
   if (errors.length === 0) return null
   
@@ -421,6 +438,20 @@ export function getSmartRecommendation(): { type: string; keys: string[]; reason
       type: 'initial',
       keys: ['v', 'i', 'u'],
       reason: 'zh/ch/sh 变位声母错误较多，建议专项练习',
+    }
+  }
+
+  const sortedInitials = Object.entries(weakInitials).sort((a, b) => b[1] - a[1])
+  if (sortedInitials.length > 0) {
+    const [weakInitial, count] = sortedInitials[0]
+    if (count >= 3) {
+      return {
+        type: 'initial',
+        keys: [weakInitial],
+        reason: weakInitial === '∅'
+          ? `零声母错误${count}次，建议专项练习`
+          : `声母 "${weakInitial}" 错误${count}次，建议专项练习`,
+      }
     }
   }
   

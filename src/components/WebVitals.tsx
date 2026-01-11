@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { onCLS, onFID, onINP, onLCP, onTTFB, type Metric } from 'web-vitals'
+import { onCLS, onINP, onLCP, onTTFB, type Metric } from 'web-vitals'
 
 function sendToAnalytics(metric: Metric) {
   const body = JSON.stringify(metric)
@@ -20,7 +20,6 @@ function sendToAnalytics(metric: Metric) {
 export default function WebVitals() {
   useEffect(() => {
     onCLS(sendToAnalytics)
-    onFID(sendToAnalytics)
     onINP(sendToAnalytics)
     onLCP(sendToAnalytics)
     onTTFB(sendToAnalytics)

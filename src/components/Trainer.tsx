@@ -646,13 +646,13 @@ export default function Trainer() {
                   <span className={theme.text}>{current.pinyin}</span>
                   <button
                     onClick={() => openPinyinEditor(current.pinyin)}
-                    className="text-xs px-2 py-0.5 rounded bg-gray-700/60 text-gray-200 hover:bg-gray-600"
+                    className={`text-xs px-2 py-0.5 rounded ${theme.btnSmall}`}
                     title="修改拼音（多音字校正）"
                   >
                     ✏️
                   </button>
                   {current.pinyinSource === 'manual' && (
-                    <span className="text-[10px] sm:text-xs px-1.5 py-0.5 rounded bg-yellow-700/60 text-yellow-200">
+                    <span className={`text-[10px] sm:text-xs px-1.5 py-0.5 rounded ${theme.tagManual}`}>
                       手动
                     </span>
                   )}
@@ -678,14 +678,14 @@ export default function Trainer() {
                     {current.autoPinyin && current.pinyinSource === 'manual' && (
                       <button
                         onClick={() => resetPinyinEdit(currentIndex)}
-                        className="px-2 py-1 rounded bg-gray-600 text-white"
+                        className={`px-2 py-1 rounded ${theme.btnSmall}`}
                       >
                         重置
                       </button>
                     )}
                     <button
                       onClick={() => { setIsEditingPinyin(false); setPinyinEditError('') }}
-                      className="px-2 py-1 rounded bg-gray-600 text-white"
+                      className={`px-2 py-1 rounded ${theme.btnSmall}`}
                     >
                       取消
                     </button>
@@ -708,9 +708,9 @@ export default function Trainer() {
                 {/* 错误提示 */}
                 {isError && wrongKey && correctKey && (
                   <div className="text-xs sm:text-sm text-red-400 mt-1">
-                    你按了 <span className="font-mono bg-red-900/50 px-1 rounded">{wrongKey}</span>，
-                    正确是 <span className="font-mono bg-green-900/50 px-1 rounded">{correctKey}</span>
-                    <span className="ml-2 text-[10px] sm:text-xs text-yellow-300">目标 {current.shuangpin}</span>
+                    你按了 <span className={`font-mono ${theme.errorHintWrong} px-1 rounded`}>{wrongKey}</span>，
+                    正确是 <span className={`font-mono ${theme.errorHintCorrect} px-1 rounded`}>{correctKey}</span>
+                    <span className={`ml-2 text-[10px] sm:text-xs ${theme.errorHintTarget}`}>目标 {current.shuangpin}</span>
                   </div>
                 )}
               </div>

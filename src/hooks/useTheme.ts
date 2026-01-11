@@ -39,6 +39,16 @@ export function useTheme(darkMode: boolean) {
     tooltip: 'bg-gray-900 text-white border border-gray-700',
     // 成就未解锁
     achievementLocked: 'bg-gray-700/50 opacity-60',
+    // 小按钮（编辑、重置等）
+    btnSmall: 'bg-gray-700/60 text-gray-200 hover:bg-gray-600',
+    // 手动标签
+    tagManual: 'bg-yellow-700/60 text-yellow-200',
+    // 错误提示背景
+    errorHintWrong: 'bg-red-900/50',
+    errorHintCorrect: 'bg-green-900/50',
+    errorHintTarget: 'text-yellow-300',
+    // 禁用按钮
+    btnDisabled: 'bg-gray-600 text-gray-400 cursor-not-allowed',
   } : {
     // 基础
     bg: 'bg-gray-50',
@@ -76,6 +86,16 @@ export function useTheme(darkMode: boolean) {
     tooltip: 'bg-gray-800 text-white',
     // 成就未解锁
     achievementLocked: 'bg-gray-200 opacity-60',
+    // 小按钮（编辑、重置等）
+    btnSmall: 'bg-gray-200 text-gray-700 hover:bg-gray-300',
+    // 手动标签
+    tagManual: 'bg-yellow-200 text-yellow-800',
+    // 错误提示背景
+    errorHintWrong: 'bg-red-100',
+    errorHintCorrect: 'bg-green-100',
+    errorHintTarget: 'text-yellow-600',
+    // 禁用按钮
+    btnDisabled: 'bg-gray-300 text-gray-400 cursor-not-allowed',
   }
 }
 

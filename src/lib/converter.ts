@@ -35,9 +35,11 @@ export function convertTextToQueue(text: string): CharInfo[] {
     queue.push({
       char,
       pinyin: py,
+      autoPinyin: py,
       initial,
       final,
       shuangpin,
+      pinyinSource: 'auto',
     })
   }
 

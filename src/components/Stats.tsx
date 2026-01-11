@@ -5,6 +5,7 @@ import {
   getPracticeStats,
   getFrequentErrors,
   getWeakFinals,
+  getWeakInitials,
   getDailyRecords,
   getUnlockedAchievements,
   getSmartRecommendation,
@@ -27,6 +28,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
   const [stats, setStats] = useState<PracticeStats | null>(null)
   const [errors, setErrors] = useState<ErrorRecord[]>([])
   const [weakFinals, setWeakFinals] = useState<Record<string, number>>({})
+  const [weakInitials, setWeakInitials] = useState<Record<string, number>>({})
   const [daily, setDaily] = useState<DailyRecord[]>([])
   const [achievements, setAchievements] = useState<Achievement[]>([])
   const [recommendation, setRecommendation] = useState<{ type: string; keys: string[]; reason: string } | null>(null)
@@ -36,6 +38,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
     setStats(getPracticeStats())
     setErrors(getFrequentErrors(10))
     setWeakFinals(getWeakFinals())
+    setWeakInitials(getWeakInitials())
     setDaily(getDailyRecords())
     setAchievements(getUnlockedAchievements())
     setRecommendation(getSmartRecommendation())
@@ -165,6 +168,24 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
               ) : (
                 <p className={theme.textMuted}>暂无数据</p>
               )}
+
+              {/* 薄弱声母 */}
+              <h3 className={`font-bold mt-6 mb-3 ${theme.text}`}>薄弱声母</h3>
+              {Object.keys(weakInitials).length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {Object.entries(weakInitials)
+                    .sort((a, b) => b[1] - a[1])
+                    .slice(0, 8)
+                    .map(([key, count]) => (
+                      <div key={key} className={`${darkMode ? 'bg-purple-900/30' : 'bg-purple-100'} px-3 py-2 rounded-lg`}>
+                        <span className="font-mono text-lg">{key === '∅' ? '∅' : key}</span>
+                        <span className={`text-xs ml-2 ${theme.textMuted}`}>{count}次</span>
+                      </div>
+                    ))}
+                </div>
+              ) : (
+                <p className={theme.textMuted}>暂无数据</p>
+              )}
             </>
           )}
 
@@ -237,6 +258,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
                 setStats({ totalChars: 0, totalErrors: 0, totalTime: 0, sessions: 0, lastPractice: 0 })
                 setErrors([])
                 setWeakFinals({})
+                setWeakInitials({})
                 setDaily([])
                 setAchievements(getUnlockedAchievements())
               }

@@ -101,7 +101,7 @@ export default function CustomTextModal({ onStart, onClose, darkMode }: CustomTe
             onClick={handleStart}
             disabled={!text.trim()}
             className={`w-full mt-4 py-3 rounded-lg font-bold transition ${
-              text.trim() ? 'bg-blue-600 hover:bg-blue-700 text-white' : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+              text.trim() ? 'bg-blue-600 hover:bg-blue-700 text-white' : theme.btnDisabled
             }`}
           >
             开始练习

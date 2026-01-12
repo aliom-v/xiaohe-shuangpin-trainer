@@ -61,18 +61,18 @@ function ModeSelectorComponent({
   onOpenPracticeMode,
 }: ModeSelectorProps) {
   return (
-    <div className={`${theme.card} rounded-xl p-2 sm:p-3 mb-4 flex flex-wrap gap-1.5 sm:gap-2 items-center`}>
+    <div className={`${theme.card} p-2 sm:p-3 mb-4 flex flex-wrap gap-1.5 sm:gap-2 items-center`}>
       <span className={`text-xs sm:text-sm ${theme.textMuted}`}>模式:</span>
       <button
         onClick={() => { setLearningMode('hint'); setIsTimedMode(false) }}
-        className={`group relative px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${learningMode === 'hint' && !isTimedMode ? 'bg-blue-600 text-white' : theme.btn}`}
+        className={`group relative px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${learningMode === 'hint' && !isTimedMode ? 'bg-blue-100 dark:bg-blue-600 text-blue-700 dark:text-white border border-blue-300 dark:border-blue-500' : theme.btn}`}
         title="显示拼音和双拼提示，键盘高亮下一个键"
       >
         💡 <span className="hidden sm:inline">提示</span>
       </button>
       <button
         onClick={() => { setLearningMode('blind'); setIsTimedMode(false) }}
-        className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${learningMode === 'blind' && !isTimedMode ? 'bg-blue-600 text-white' : theme.btn}`}
+        className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${learningMode === 'blind' && !isTimedMode ? 'bg-indigo-100 dark:bg-indigo-600 text-indigo-700 dark:text-white border border-indigo-300 dark:border-indigo-500' : theme.btn}`}
         title="只显示汉字，隐藏双拼提示"
       >
         🙈 <span className="hidden sm:inline">盲打</span>
@@ -81,18 +81,18 @@ function ModeSelectorComponent({
       <div className="relative group">
         <button
           onClick={() => { setIsTimedMode(true); setTimeLeft(timedDuration) }}
-          className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${isTimedMode ? 'bg-orange-600 text-white' : theme.btn}`}
+          className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${isTimedMode ? 'bg-orange-100 dark:bg-orange-600 text-orange-700 dark:text-white border border-orange-300 dark:border-orange-500' : theme.btn}`}
           title="限时挑战模式"
         >
           ⏱️ <span className="hidden sm:inline">{timedDuration}秒</span>
         </button>
         {/* 时长选择下拉 */}
-        <div className={`absolute top-full left-0 mt-1 ${theme.card} rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10`}>
+        <div className={`absolute top-full left-0 mt-1 ${theme.dropdown} rounded-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-10 overflow-hidden min-w-[80px]`}>
           {[30, 60, 120, 300].map(sec => (
             <button
               key={sec}
               onClick={() => { setTimedDuration(sec); setTimeLeft(sec); setIsTimedMode(true) }}
-              className={`block w-full px-3 py-1 text-xs text-left hover:bg-blue-500 hover:text-white ${timedDuration === sec ? 'bg-blue-500 text-white' : ''}`}
+              className={`block w-full px-3 py-2 text-xs sm:text-sm text-left transition-colors hover:bg-blue-500 hover:text-white ${timedDuration === sec ? 'bg-blue-100 dark:bg-blue-600 text-blue-600 dark:text-white' : theme.text}`}
             >
               {sec < 60 ? `${sec}秒` : `${sec / 60}分钟`}
             </button>
@@ -108,7 +108,7 @@ function ModeSelectorComponent({
       </button>
       <button
         onClick={() => setAllowShortFullPinyin(s => !s)}
-        className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${allowShortFullPinyin ? 'bg-green-600 text-white' : theme.btn}`}
+        className={`px-2 sm:px-3 py-1 rounded-lg text-xs sm:text-sm transition ${allowShortFullPinyin ? 'bg-green-100 dark:bg-green-600 text-green-700 dark:text-white border border-green-300 dark:border-green-500' : theme.btn}`}
         title="允许 1-2 字母全拼输入"
       >
         🔤 <span className="hidden sm:inline">1-2全拼</span>
@@ -118,7 +118,7 @@ function ModeSelectorComponent({
         <select
           value={soundPackId}
           onChange={(e) => setSoundPackId(e.target.value)}
-          className={`px-2 py-1 rounded-lg text-xs sm:text-sm border ${theme.input} ${theme.text}`}
+          className={`px-2 py-1 rounded-lg text-xs sm:text-sm ${theme.input}`}
           title="选择键盘音效包"
           aria-label="选择键盘音效包"
         >

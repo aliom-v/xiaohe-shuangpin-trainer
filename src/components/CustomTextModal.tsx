@@ -13,7 +13,7 @@ export default function CustomTextModal({ onStart, onClose, darkMode }: CustomTe
   const [text, setText] = useState('')
   const [mode, setMode] = useState<'normal' | 'follow'>('normal')
 
-  const theme = useTheme(darkMode)
+  const theme = useTheme()
 
   const handleStart = () => {
     const cleanText = text.trim()
@@ -31,12 +31,12 @@ export default function CustomTextModal({ onStart, onClose, darkMode }: CustomTe
   ]
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className={`${theme.card} rounded-2xl max-w-lg w-full`}>
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className={`${theme.card} max-w-lg w-full`}>
         {/* 头部 */}
         <div className={`p-4 sm:p-6 border-b ${theme.border} flex justify-between items-center`}>
           <h2 className={`text-xl sm:text-2xl font-bold ${theme.text}`}>📝 自定义文本</h2>
-          <button onClick={onClose} className={`${theme.textMuted} hover:${theme.text} text-2xl`}>×</button>
+          <button onClick={onClose} className={`${theme.textMuted} hover:text-white text-2xl leading-none`}>×</button>
         </div>
 
         <div className="p-4 sm:p-6">

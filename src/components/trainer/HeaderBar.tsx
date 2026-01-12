@@ -59,7 +59,7 @@ function HeaderBarComponent({
         </button>
         <button
           onClick={onToggleAutoNext}
-          className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${autoNext ? 'bg-purple-600 text-white' : theme.btn}`}
+          className={`px-2 sm:px-3 py-1.5 sm:py-2 rounded-lg transition text-sm sm:text-base ${autoNext ? 'bg-purple-100 dark:bg-purple-600 text-purple-700 dark:text-white border border-purple-300 dark:border-purple-500' : theme.btn}`}
           title="自动下一个"
           aria-label={autoNext ? '关闭自动下一个' : '开启自动下一个'}
         >

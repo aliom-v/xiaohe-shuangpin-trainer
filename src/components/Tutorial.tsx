@@ -45,19 +45,17 @@ const steps = [
 export default function Tutorial({ onClose, darkMode }: TutorialProps) {
   const [step, setStep] = useState(0)
   const [showTable, setShowTable] = useState(false)
-
-  const theme = useTheme(darkMode)
-
+  const theme = useTheme()
   const currentStep = steps[step]
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className={`${theme.card} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-auto`}>
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className={`${theme.card} max-w-2xl w-full max-h-[90vh] overflow-auto`}>
         {/* 头部 */}
         <div className={`p-6 border-b ${theme.border}`}>
           <div className="flex justify-between items-center">
             <h2 className={`text-2xl font-bold ${theme.text}`}>小鹤双拼教程</h2>
-            <button onClick={onClose} className={`${theme.textMuted} hover:${theme.text} text-2xl`}>×</button>
+            <button onClick={onClose} className={`${theme.textMuted} hover:text-white text-2xl leading-none`}>×</button>
           </div>
           {/* 进度条 */}
           <div className="flex gap-2 mt-4">

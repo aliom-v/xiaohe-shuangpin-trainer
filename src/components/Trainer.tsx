@@ -74,7 +74,7 @@ export default function Trainer() {
   } = useTrainerSettings()
 
   const startTimeRef = useRef<number>(0)
-  const theme = useTheme(darkMode)
+  const theme = useTheme()
   const { current, isComplete, targetKeys } = useTrainerDerived(state, learningMode)
 
   // === Utility functions ===

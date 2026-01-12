@@ -41,8 +41,7 @@ const allPinyins = [
 
 export default function ShuangpinLookup({ onClose, darkMode }: ShuangpinLookupProps) {
   const [query, setQuery] = useState('')
-
-  const theme = useTheme(darkMode)
+  const theme = useTheme()
 
   // 搜索结果
   const results = useMemo(() => {
@@ -59,12 +58,12 @@ export default function ShuangpinLookup({ onClose, darkMode }: ShuangpinLookupPr
   }, [query])
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className={`${theme.card} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col`}>
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className={`${theme.card} max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col`}>
         {/* 头部 */}
         <div className={`p-4 sm:p-6 border-b ${theme.border} flex justify-between items-center`}>
           <h2 className={`text-xl sm:text-2xl font-bold ${theme.text}`}>🔍 双拼查询</h2>
-          <button onClick={onClose} className={`${theme.textMuted} hover:${theme.text} text-2xl`}>×</button>
+          <button onClick={onClose} className={`${theme.textMuted} hover:text-white text-2xl leading-none`}>×</button>
         </div>
 
         {/* 搜索框 */}
@@ -74,7 +73,7 @@ export default function ShuangpinLookup({ onClose, darkMode }: ShuangpinLookupPr
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder="输入拼音查询双拼编码，如：shuang、zh、ang..."
-            className={`w-full p-3 rounded-lg border ${theme.input} ${theme.text} focus:border-blue-500 focus:outline-none`}
+            className={`w-full p-3 rounded-lg ${theme.input} focus:ring-2 focus:ring-blue-500 focus:outline-none`}
             autoFocus
           />
         </div>
@@ -86,7 +85,7 @@ export default function ShuangpinLookup({ onClose, darkMode }: ShuangpinLookupPr
           ) : results.length > 0 ? (
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {results.map((r, i) => (
-                <div key={i} className={`${theme.statCard} rounded-lg p-3 text-center`}>
+                <div key={i} className={`${theme.statCard} p-3 text-center`}>
                   <div className={`text-lg ${theme.text}`}>{r.pinyin}</div>
                   <div className="text-2xl font-mono text-blue-500 font-bold">{r.shuangpin}</div>
                   <div className={`text-xs ${theme.textMuted}`}>
@@ -96,31 +95,37 @@ export default function ShuangpinLookup({ onClose, darkMode }: ShuangpinLookupPr
               ))}
             </div>
           ) : (
-            /* 默认显示对照表 */
-            <div className="space-y-4">
+            /* 默认显示对照表 - 简洁网格 */
+            <div className="space-y-6">
               {/* 声母表 */}
               <div>
-                <h3 className={`font-bold mb-2 ${theme.text}`}>声母对照</h3>
-                <div className="grid grid-cols-4 sm:grid-cols-6 gap-2 text-sm">
+                <h3 className={`font-bold mb-3 ${theme.text} flex items-center gap-2`}>
+                  <span className="w-3 h-3 bg-blue-500 rounded-sm"></span>
+                  声母对照
+                </h3>
+                <div className="grid grid-cols-5 sm:grid-cols-7 gap-1.5">
                   {Object.entries(initialMap).map(([py, key]) => (
-                    <div key={py} className={`${theme.statCard} rounded p-2 text-center`}>
+                    <div key={py} className={`${theme.statCard} px-2 py-1.5 text-center text-sm`}>
                       <span className={theme.textMuted}>{py}</span>
-                      <span className="mx-1">→</span>
-                      <span className="text-blue-500 font-mono font-bold">{key}</span>
+                      <span className="mx-1 text-slate-400">→</span>
+                      <span className="text-blue-500 dark:text-blue-400 font-mono font-bold">{key}</span>
                     </div>
                   ))}
                 </div>
               </div>
-              
+
               {/* 韵母表 */}
               <div>
-                <h3 className={`font-bold mb-2 ${theme.text}`}>韵母对照</h3>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-sm">
+                <h3 className={`font-bold mb-3 ${theme.text} flex items-center gap-2`}>
+                  <span className="w-3 h-3 bg-emerald-500 rounded-sm"></span>
+                  韵母对照
+                </h3>
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
                   {Object.entries(finalMap).map(([py, key]) => (
-                    <div key={py} className={`${theme.statCard} rounded p-2 text-center`}>
+                    <div key={py} className={`${theme.statCard} px-2 py-1.5 text-center text-sm`}>
                       <span className={theme.textMuted}>{py}</span>
-                      <span className="mx-1">→</span>
-                      <span className="text-green-500 font-mono font-bold">{key}</span>
+                      <span className="mx-1 text-slate-400">→</span>
+                      <span className="text-emerald-500 dark:text-emerald-400 font-mono font-bold">{key}</span>
                     </div>
                   ))}
                 </div>
@@ -128,13 +133,16 @@ export default function ShuangpinLookup({ onClose, darkMode }: ShuangpinLookupPr
 
               {/* 零声母 */}
               <div>
-                <h3 className={`font-bold mb-2 ${theme.text}`}>零声母（特殊）</h3>
-                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2 text-sm">
+                <h3 className={`font-bold mb-3 ${theme.text} flex items-center gap-2`}>
+                  <span className="w-3 h-3 bg-amber-500 rounded-sm"></span>
+                  零声母（特殊）
+                </h3>
+                <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5">
                   {Object.entries(specialSyllables).map(([py, key]) => (
-                    <div key={py} className={`${theme.statCard} rounded p-2 text-center`}>
+                    <div key={py} className={`${theme.statCard} px-2 py-1.5 text-center text-sm`}>
                       <span className={theme.textMuted}>{py}</span>
-                      <span className="mx-1">→</span>
-                      <span className="text-orange-500 font-mono font-bold">{key}</span>
+                      <span className="mx-1 text-slate-400">→</span>
+                      <span className="text-amber-500 dark:text-amber-400 font-mono font-bold">{key}</span>
                     </div>
                   ))}
                 </div>

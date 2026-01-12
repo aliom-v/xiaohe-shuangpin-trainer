@@ -63,7 +63,7 @@ function Keyboard({
     }
   }, [activeKey])
 
-  const theme = useTheme(darkMode)
+  const theme = useTheme()
 
   const getKeyClass = (key: string) => {
     const base = 'relative w-8 h-10 sm:w-11 sm:h-11 md:w-12 md:h-12 lg:w-14 lg:h-14 rounded-lg md:rounded-xl font-mono flex flex-col items-center justify-center transition-all duration-75 border-b-2 md:border-b-4 select-none cursor-pointer'
@@ -103,7 +103,7 @@ function Keyboard({
   }
 
   return (
-    <div className={`${theme.card} rounded-xl p-2 sm:p-4 md:p-5`}>
+    <div className={`${theme.card} p-2 sm:p-4 md:p-5`}>
       <div className="flex flex-col items-center gap-1 sm:gap-1.5 md:gap-2">
         {rows.map((row, rowIdx) => (
           <div 

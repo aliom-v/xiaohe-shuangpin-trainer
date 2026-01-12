@@ -44,7 +44,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
     setRecommendation(getSmartRecommendation())
   }, [])
 
-  const theme = useTheme(darkMode)
+  const theme = useTheme()
 
   const getFinalName = (key: string) => {
     const entry = Object.entries(finalMap).find(([_, v]) => v === key)
@@ -66,8 +66,8 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
   const streak = daily.length > 0 ? getStreak(daily) : 0
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <div className={`${theme.card} rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-auto scrollbar-hide`}>
+    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
+      <div className={`${theme.card} max-w-2xl w-full max-h-[90vh] overflow-auto scrollbar-hide`}>
         {/* 头部 */}
         <div className={`p-4 sm:p-6 border-b ${theme.border} flex justify-between items-center`}>
           <h2 className={`text-xl sm:text-2xl font-bold ${theme.text}`}>练习统计</h2>
@@ -177,7 +177,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
                     .sort((a, b) => b[1] - a[1])
                     .slice(0, 8)
                     .map(([key, count]) => (
-                      <div key={key} className={`${darkMode ? 'bg-purple-900/30' : 'bg-purple-100'} px-3 py-2 rounded-lg`}>
+                      <div key={key} className={`bg-purple-100 dark:bg-purple-700 text-purple-800 dark:text-white px-3 py-2 rounded-lg border border-purple-200 dark:border-purple-500`}>
                         <span className="font-mono text-lg">{key === '∅' ? '∅' : key}</span>
                         <span className={`text-xs ml-2 ${theme.textMuted}`}>{count}次</span>
                       </div>
@@ -274,7 +274,7 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
 }
 
 function StatCard({ label, value, color, darkMode }: { label: string; value: string | number; color: string; darkMode: boolean }) {
-  const theme = useTheme(darkMode)
+  const theme = useTheme()
   const colors: Record<string, string> = {
     blue: 'text-blue-500',
     green: 'text-green-500',

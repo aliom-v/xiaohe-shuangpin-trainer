@@ -43,7 +43,6 @@ export function useTrainerSettings() {
   const [settingsReady, setSettingsReady] = useState(false)
 
   useEffect(() => {
-    const savedDarkMode = localStorage.getItem('shuangpin_darkMode')
     const savedSound = localStorage.getItem('shuangpin_sound')
     const savedMode = localStorage.getItem('shuangpin_mode')
     const savedSource = localStorage.getItem('shuangpin_source')
@@ -54,14 +53,7 @@ export function useTrainerSettings() {
     const savedErrorVolume = localStorage.getItem('shuangpin_sound_volume_error')
     const savedLegacyVolume = localStorage.getItem('shuangpin_sound_volume')
 
-    // 主题：优先使用用户保存的设置，否则跟随系统
-    if (savedDarkMode !== null) {
-      setDarkMode(savedDarkMode === 'true')
-    } else {
-      // 跟随系统主题
-      const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches
-      setDarkMode(prefersDark)
-    }
+    // Sound settings initialization
     if (savedSound !== null) setSoundEnabled(savedSound === 'true')
     if (savedMode && isLearningMode(savedMode)) setLearningMode(savedMode)
     if (savedSource && isTextSource(savedSource)) setTextSource(savedSource)
@@ -96,9 +88,44 @@ export function useTrainerSettings() {
       setErrorVolume(parsedLegacyVolume)
       localStorage.removeItem('shuangpin_sound_volume')
     }
+    
+    // Theme initialization
+    const savedDarkMode = localStorage.getItem('shuangpin_darkMode')
+    if (savedDarkMode !== null) {
+      setDarkMode(savedDarkMode === 'true')
+    } else {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+      setDarkMode(mediaQuery.matches)
+    }
 
     setSettingsReady(true)
   }, [])
+
+  // Listen for system theme changes
+  useEffect(() => {
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)')
+    const handleChange = (e: MediaQueryListEvent) => {
+      // Only update if user hasn't manually set a preference (optional, but here we just follow system if no override? 
+      // actually usually manual override persists. But if they never set it, we should follow system.
+      // logic: if localStorage has 'shuangpin_darkMode', ignore system changes? 
+      // or better: just let the user toggle. 
+      // For now, let's keep it simple: if no local storage, follow system.
+      if (localStorage.getItem('shuangpin_darkMode') === null) {
+        setDarkMode(e.matches)
+      }
+    }
+    mediaQuery.addEventListener('change', handleChange)
+    return () => mediaQuery.removeEventListener('change', handleChange)
+  }, [])
+
+  // Sync dark mode to DOM
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add('dark')
+    } else {
+      document.documentElement.classList.remove('dark')
+    }
+  }, [darkMode])
 
   useEffect(() => {
     if (!settingsReady) return

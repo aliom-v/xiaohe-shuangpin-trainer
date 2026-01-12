@@ -27,9 +27,9 @@ function InputAreaComponent({
   setTextSource,
 }: InputAreaProps) {
   return (
-    <div className={`${theme.card} rounded-xl p-4 mt-4`}>
+    <div className={`${theme.card} p-4 mt-4`}>
       <textarea
-        className={`w-full p-3 rounded-lg border ${theme.input} focus:border-blue-500 focus:outline-none resize-none ${theme.bg} ${theme.text}`}
+        className={`w-full p-3 ${theme.input} focus:ring-2 focus:ring-blue-500 focus:outline-none resize-none`}
         rows={2}
         placeholder="在此粘贴要练习的文本，或点击随机文本..."
         value={inputText}

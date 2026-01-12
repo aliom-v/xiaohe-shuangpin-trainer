@@ -66,8 +66,8 @@ export default function Stats({ onClose, onPracticeErrors, darkMode }: StatsProp
   const streak = daily.length > 0 ? getStreak(daily) : 0
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className={`${theme.card} max-w-2xl w-full max-h-[90vh] overflow-auto scrollbar-hide`}>
+    <div className={`fixed inset-0 ${theme.modalOverlay} flex items-center justify-center z-50 p-4`}>
+      <div className={`${theme.modalCard} max-w-2xl w-full max-h-[90vh] overflow-auto scrollbar-hide`}>
         {/* 头部 */}
         <div className={`p-4 sm:p-6 border-b ${theme.border} flex justify-between items-center`}>
           <h2 className={`text-xl sm:text-2xl font-bold ${theme.text}`}>练习统计</h2>

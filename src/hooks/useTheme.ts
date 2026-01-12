@@ -7,6 +7,8 @@ export function useTheme() {
     // 基础 - 使用渐变感的背景层次
     bg: 'bg-slate-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800',
     card: 'bg-white dark:bg-slate-800/90 shadow-lg dark:shadow-2xl dark:shadow-black/20 rounded-2xl backdrop-blur-sm border border-slate-100 dark:border-slate-700/50',
+    modalOverlay: 'bg-black/60 backdrop-blur-sm',
+    modalCard: 'bg-white dark:bg-slate-800 shadow-2xl ring-1 ring-slate-900/10 dark:ring-white/10 rounded-2xl border border-slate-200 dark:border-slate-600',
     text: 'text-slate-800 dark:text-slate-100',
     textMuted: 'text-slate-500 dark:text-slate-400',
     border: 'border-slate-200 dark:border-slate-700',

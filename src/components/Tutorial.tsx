@@ -49,8 +49,8 @@ export default function Tutorial({ onClose, darkMode }: TutorialProps) {
   const currentStep = steps[step]
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className={`${theme.card} max-w-2xl w-full max-h-[90vh] overflow-auto`}>
+    <div className={`fixed inset-0 ${theme.modalOverlay} flex items-center justify-center z-50 p-4`}>
+      <div className={`${theme.modalCard} max-w-2xl w-full max-h-[90vh] overflow-auto`}>
         {/* 头部 */}
         <div className={`p-6 border-b ${theme.border}`}>
           <div className="flex justify-between items-center">

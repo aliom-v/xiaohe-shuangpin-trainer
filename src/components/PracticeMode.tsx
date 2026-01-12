@@ -49,8 +49,8 @@ export default function PracticeMode({ onSelect, onClose, darkMode }: PracticeMo
   }
 
   return (
-    <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-      <div className={`${theme.card} max-w-2xl w-full max-h-[90vh] overflow-auto`}>
+    <div className={`fixed inset-0 ${theme.modalOverlay} flex items-center justify-center z-50 p-4`}>
+      <div className={`${theme.modalCard} max-w-2xl w-full max-h-[90vh] overflow-auto`}>
         <div className={`p-6 border-b ${theme.border} flex justify-between items-center`}>
           <h2 className={`text-2xl font-bold ${theme.text}`}>专项练习</h2>
           <button onClick={onClose} className={`${theme.textMuted} hover:text-white text-2xl leading-none`}>×</button>

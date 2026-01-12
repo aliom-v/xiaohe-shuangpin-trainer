@@ -3,7 +3,7 @@
 // ============================================
 
 import { pinyin } from 'pinyin-pro'
-import { pinyinToShuangpin, CharInfo } from './xiaohe'
+import { pinyinToShuangpin, CharInfo, parsePinyinParts } from './xiaohe'
 
 /**
  * 将汉字文本转换为练习队列
@@ -27,8 +27,7 @@ export function convertTextToQueue(text: string): CharInfo[] {
     }
 
     const py = item.pinyin || ''
-    const initial = item.initial || ''
-    const final = item.final || ''
+    const { initial, final } = parsePinyinParts(py)
 
     const shuangpin = pinyinToShuangpin(py, initial, final)
 
